@@ -1,3 +1,4 @@
+import type { Project, WorkPackage, Task, ProjectEvent } from "@/lib/tracker/types";
 import type { IssueCategory } from "@/lib/pilotIssueCategories";
 
 export type MeetingStatus = "prepared" | "live" | "paused" | "completed" | "archived";
@@ -746,6 +747,30 @@ export type RemoteCaptureReadiness = {
 export type Database = {
   public: {
     Tables: {
+      projects: {
+        Row: Project;
+        Insert: Partial<Project> & Pick<Project, "name">;
+        Update: Partial<Project>;
+        Relationships: [];
+      };
+      work_packages: {
+        Row: WorkPackage;
+        Insert: Partial<WorkPackage> & Pick<WorkPackage, "project_id" | "name">;
+        Update: Partial<WorkPackage>;
+        Relationships: [];
+      };
+      tasks: {
+        Row: Task;
+        Insert: Partial<Task> & Pick<Task, "work_package_id" | "title">;
+        Update: Partial<Task>;
+        Relationships: [];
+      };
+      project_events: {
+        Row: ProjectEvent;
+        Insert: Partial<ProjectEvent> & Pick<ProjectEvent, "project_id" | "entity_type" | "entity_id" | "action">;
+        Update: never;
+        Relationships: [];
+      };
       profiles: {
         Row: { id: string; role: "owner" | "viewer"; created_at: string };
         Insert: { id: string; role: "owner" | "viewer"; created_at?: string };

@@ -1,7 +1,7 @@
 # Public hosting setup (Sprint 33)
 
 1. Apply every SQL migration in `supabase/migrations/` in filename order,
-   ending with `0033_auth_rls.sql`, before exposing the app publicly.
+   through `0036_project_events.sql`, before exposing the app publicly.
 2. In Supabase Dashboard → Authentication → Users, create Adam's owner user
    and a viewer user with email/password. Confirm their email addresses in
    the dashboard. Copy their user UUIDs and run this in the SQL editor:
@@ -109,3 +109,73 @@ contradiction detection and conversation-state analysis.
   local scope, preserving existing browser sessions.
 
 Auth follows the [Supabase SSR guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=framework&framework=nextjs), using the Next.js 16 `proxy.ts` convention.
+
+# Project tracker setup (Sprint 34)
+
+For the existing hosted project, leave the verified Sprint 33 users and
+settings unchanged. In Supabase SQL Editor run each **entire file** in order:
+
+1. `supabase/migrations/0034_projects.sql`
+2. `supabase/migrations/0035_work_packages_tasks.sql`
+3. `supabase/migrations/0036_project_events.sql`
+
+Do not rerun 0033 on a database where it has already succeeded. These three
+migrations are new and have not yet been applied to the hosted project.
+Apply all three before opening the tracker; 0036 installs the atomic audit
+triggers. Every new table enables RLS in its own migration and revokes all
+anonymous privileges. No new environment variables or service role key are
+needed. The tracker makes no AI calls and has no meeting-linking UI.
+
+After applying them, open `/projects` as owner. Create a project, add two
+work packages and tasks, and move a task through To do, Doing, Blocked (with
+a reason), and Done in list and board. The task pane edits title, status,
+due date, size, notes, reason and order. Archive a work package and use Show
+archived to reveal it; restore its project/work package before editing its
+tasks. Progress and open-task counts exclude archived work by default.
+Hard deletes are blocked in SQL; archive/restore keeps history intact.
+
+Project events are inserted by SQL triggers in the same transaction as the
+write, including direct REST mutations. Events have no owner/viewer update
+or delete grants/policies. Recent activity shows the latest 100 events on
+the project page; all events remain in `project_events`.
+
+`/my-week` selects open work due from today through six days ahead, all
+overdue work, and all Doing/Blocked tasks even without a nearby due date.
+Done on its board means completed in the current Monday–Sunday calendar
+week. Grouping uses the browser's local calendar dates; a date-only deadline
+never shifts with UTC. Archived tasks and ancestors are hidden unless Show
+archived is on. List/board preference is stored under a user-specific key.
+Login now lands on `/my-week`; the original `/` dashboard is unchanged.
+Work package status uses the same To do / Doing / Blocked / Done vocabulary.
+
+Run the repeatable checks:
+
+```sh
+npm run typecheck
+npm run lint
+npm run test:auth-rls
+npm run test:tracker-model
+npm run test:tracker-ui
+npm run test:signed-out
+```
+
+`test:tracker-ui` runs the actual Next.js pages/API handlers against an
+isolated PostgreSQL (PGlite) fixture with emulated Supabase Auth/PostgREST
+transport and real SQL/RLS/triggers. It uses ports 3035 and 54339, a separate
+ignored build directory, and dummy owner/viewer accounts. It never contacts
+the hosted database or OpenAI. It automatically stops both test servers and
+restores Next's generated configuration changes. It uses cached Playwright
+Chromium or macOS Google Chrome; alternatively set
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` to your installed Chromium executable.
+
+Sprint 34 validation: typecheck, lint, production build, all 71 existing
+self-tests, the extended 34-table RLS test, date/grouping model tests and
+isolated owner/viewer browser acceptance passed. Signed-out route discovery
+now verifies 85 page/API method combinations. Browser coverage includes
+project creation, two work packages, quick add, task status changes in both
+views, blocked-reason rejection, task editing, archive visibility, events,
+My week date/project grouping, completed-this-week board, project chips,
+per-user preferences, keyboard menus and viewer API/direct REST denials.
+The existing hosted DiscoveryOS regression remained unchanged: run
+`3c420717-55e9-490a-a956-300d46279916`, 10 pass, 22 warnings, 0 failures.
+Hosted tracker acceptance remains pending until 0034–0036 are applied.

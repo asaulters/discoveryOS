@@ -47,3 +47,6 @@ next-env.d.ts
 # local Supabase CLI state
 /supabase/.temp/
 /supabase/.branches/
+
+# isolated tracker browser test build
+/.next-tracker-test/

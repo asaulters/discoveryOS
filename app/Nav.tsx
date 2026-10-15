@@ -47,6 +47,8 @@ export default function Nav({ signedIn }: { signedIn: boolean }) {
         <Link href="/" className="font-semibold">
           DiscoveryOS
         </Link>
+        <NavLink href="/my-week" label="My week" active={pathname === "/my-week"} />
+        <NavLink href="/projects" label="Projects" active={pathname.startsWith("/projects")} />
         <NavLink href="/" label="Dashboard" title="All meetings" active={pathname === "/"} />
         <OwnerOnly><NavLink
           href="/meetings/new"

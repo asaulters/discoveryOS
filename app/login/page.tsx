@@ -18,7 +18,7 @@ export default function LoginPage() {
         email: String(form.get("email")), password: String(form.get("password")),
       });
       if (error) { setError("Unable to sign in. Check your email and password."); return; }
-      router.push("/");
+      router.push("/my-week");
       router.refresh();
     } catch { setError("Unable to reach sign-in. Please try again."); }
     finally { setBusy(false); }

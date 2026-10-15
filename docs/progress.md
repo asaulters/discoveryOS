@@ -5034,3 +5034,34 @@ scope, leaving existing browser sessions intact.
 Typecheck, lint, production build, isolated migration/RLS tests, request-origin
 regression checks and all 71 existing self-tests passed. All 74 signed-out
 route/method checks passed after the origin fix.
+
+## Sprint 34: project tracker core hierarchy and views
+
+Added projects, work packages, tasks and append-only project events in
+0034–0036. Each migration enables RLS immediately, revokes all anon access,
+and reuses current_user_role. SQL triggers enforce archive-only deletion,
+blocked reasons and completion timestamps, and record every create/changed
+field/status/archive atomically. Meeting provenance is nullable and uses
+SET NULL, with no discovery linking UI or AI calls.
+
+Added /projects, /projects/[id] and /my-week, with owner forms, quick task
+entry, task side pane, progress bars, ordered packages, list/board views,
+per-user view storage, archive toggles and recent activity. My week supports
+day/project grouping, project filter chips, due/overdue/doing/blocked work,
+and done-this-week board cards. Its right column remains empty for Sprint 36.
+Nav adds Projects/My week; password login lands on /my-week. Existing / stays
+unchanged. All mutations use session-scoped Supabase and owner checks.
+
+Validation passed: typecheck, lint, build, 71 existing self-tests, extended
+RLS tests for 34 tables, tracker model tests and isolated browser/API tests
+with real PostgreSQL policies/triggers. Signed-out discovery covers 85
+route/method combinations. The browser tests caught and fixed a development
+Strict Mode dialog lifecycle issue and verify keyboard status changes,
+blocked-reason validation, archive visibility, grouping/filter chips,
+preferences and viewer read-only controls/direct REST denial.
+
+Existing hosted DiscoveryOS regression was rerun without OpenAI calls:
+3c420717-55e9-490a-a956-300d46279916, 10 pass / 22 warn / 0 fail, matching
+its prior baseline. Tracker migrations have not been applied to hosted
+Supabase; apply whole files 0034, 0035 and 0036 in order before hosted tracker
+acceptance. SETUP.md includes the migration and acceptance steps.
