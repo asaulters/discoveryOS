@@ -5009,3 +5009,28 @@ inspectable evidence behind this sprint's Share/export isolation check
 match confirmation. A separate throwaway meeting ("Sprint 28 QA -
 Cascade Delete Test") was created and deleted in the same session purely
 to verify cascade-delete behavior; nothing from it remains.
+
+
+## Sprint 33: hosted auth acceptance — October 15, 2026
+
+Adam applied 0033, provisioned owner/viewer users and profiles, and disabled
+public sign-ups and anonymous sign-ins. Owner and viewer login, sign-out and
+viewer UI behavior were confirmed in the browser. Fixed local sign-out's
+Invalid origin error by comparing against the browser Host header rather
+than Next.js's normalized localhost URL; login redirects preserve that host.
+
+Hosted acceptance used temporary authenticated sessions. Anonymous REST reads
+returned no rows. Viewer SELECT succeeded, INSERT failed with RLS code 42501,
+UPDATE/DELETE affected zero rows, and profile promotion failed. Owner CRUD
+succeeded and the scratch meeting was deleted. Viewer API reads returned 200,
+viewer API writes returned 403, and foreign-origin owner writes returned 403.
+
+The existing regression runner completed via the owner API with 32 checks:
+10 pass, 22 warn, 0 fail, matching the prior baseline. Run ID:
+62cc51a7-9800-4ae3-b926-dec548e98545. Existing scenario warnings remain.
+No OpenAI usage occurred. Temporary test sessions were revoked with local
+scope, leaving existing browser sessions intact.
+
+Typecheck, lint, production build, isolated migration/RLS tests, request-origin
+regression checks and all 71 existing self-tests passed. All 74 signed-out
+route/method checks passed after the origin fix.

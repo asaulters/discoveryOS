@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:auth-rls": "node scripts/check-auth-rls.mjs",
-    "test:signed-out": "node scripts/check-signed-out.mjs"
+    "test:signed-out": "node scripts/check-signed-out.mjs",
+    "test:request-origin": "node scripts/check-request-origin.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -87,10 +87,25 @@ contradiction detection and conversation-state analysis.
   configuration were updated to 16.4.1 for security fixes. Five advisories
   remain in the development-only lint dependency chain (`braces` through
   `micromatch`/`fast-glob`); the audit suggests a breaking lint-config downgrade.
-- Hosted verification is pending: the Supabase hostname configured in
-  `.env.local` returned DNS `ENOTFOUND`. No hosted migration was applied and
-  no users were created. The real anonymous REST curl, viewer/owner browser
-  checks, and existing database-backed regression runner still need to run
-  after the project is reachable and the dashboard steps above are complete.
+- Hosted verification completed October 15, 2026 after Adam resumed the
+  project, applied 0033, provisioned owner/viewer profiles and disabled public
+  sign-ups. Auth settings confirmed email sign-in enabled, public sign-ups
+  disabled and anonymous sign-ins disabled. Adam confirmed owner/viewer login,
+  sign-out and viewer controls in the browser.
+- Anonymous REST reads returned zero rows. A viewer session could read a
+  scratch meeting; a direct INSERT failed with PostgreSQL RLS code 42501,
+  UPDATE and DELETE affected zero rows, and profile promotion was denied.
+  Owner INSERT/SELECT/UPDATE/DELETE succeeded. The scratch meeting was removed.
+- Authenticated viewer read API returned 200; viewer write API returned 403;
+  an owner write with a foreign Origin returned 403. The local browser Host
+  is now used for origin comparison and login redirects to handle Next.js's
+  localhost normalization. Both 127.0.0.1 and localhost are covered by the
+  request-origin regression test.
+- The existing deterministic regression runner completed through the owner
+  session API: run `62cc51a7-9800-4ae3-b926-dec548e98545`, 32 checks,
+  **10 pass, 22 warn, 0 fail**, identical to the selected baseline. The
+  existing scenario warnings remain; this is not an all-pass scenario result.
+  No OpenAI calls were made. Temporary test sessions were signed out with
+  local scope, preserving existing browser sessions.
 
 Auth follows the [Supabase SSR guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=framework&framework=nextjs), using the Next.js 16 `proxy.ts` convention.

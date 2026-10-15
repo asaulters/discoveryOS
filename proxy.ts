@@ -1,3 +1,4 @@
+import { requestOrigin } from "@/lib/requestOrigin";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -32,12 +33,12 @@ export async function proxy(request: NextRequest) {
   if (!signedIn) {
     return finish(api
       ? NextResponse.json({ error: "Sign in required" }, { status: 401 })
-      : NextResponse.redirect(new URL("/login", request.url)));
+      : NextResponse.redirect(new URL("/login", requestOrigin(request))));
   }
   // Reject cross-origin cookie-authenticated mutations, including sign-out.
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
     const origin = request.headers.get("origin");
-    if (origin && origin !== request.nextUrl.origin) {
+    if (origin && origin !== requestOrigin(request)) {
       return finish(NextResponse.json({ error: "Invalid origin" }, { status: 403 }));
     }
   }
