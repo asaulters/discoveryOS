@@ -1,5 +1,33 @@
 # DiscoveryOS
 
+## Run locally
+
+Requires **Node.js 22 or newer** and npm. From your existing checkout:
+
+```sh
+cd /Users/adamsaulters/Desktop/Programming/DiscoveryOS
+npm ci
+npm run dev -- --hostname 127.0.0.1 --port 3033
+```
+
+Open **[http://127.0.0.1:3033/login](http://127.0.0.1:3033/login)** and sign
+in with your owner or viewer account. After login, you land on **My week**.
+Keep the terminal running; press **Ctrl+C** to stop the server.
+
+The app runs locally and connects to the Supabase project configured in
+`.env.local`. Your current checkout already has this file. On a fresh
+checkout, create it **only if it does not exist**:
+
+```sh
+[ -f .env.local ] || cp .env.local.example .env.local
+```
+
+Fill in `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and
+`OPENAI_API_KEY` before starting the app. The tracker itself makes no AI
+calls. For a new Supabase project, follow [SETUP.md](SETUP.md) to apply
+migrations and create owner/viewer profiles. The existing hosted project
+already has migrations through Sprint 34 applied.
+
 Manual transcript-first live discovery HUD prototype. A facilitator sets up
 a meeting, optionally generates an AI pre-meeting brief, pastes transcript
 chunks in manually during the call (or, as of Sprint 11, records short
