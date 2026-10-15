@@ -1,4 +1,6 @@
 "use client";
+import Evidence from "@/app/tracker/Evidence";
+import Raid from "@/app/tracker/Raid";
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -67,6 +69,7 @@ export default function ProjectClient({
   const tracker = useTracker(initial, initial.projects[0].id),
     [view, setView] = useViewPreference(userId, "project"),
     [showArchived, setShowArchived] = useState(false);
+  const [raidView, setRaidView] = useState(false);
   const [editing, setEditing] = useState(false),
     [adding, setAdding] = useState(false),
     [editingPackage, setEditingPackage] = useState<string | null>(null);
@@ -188,7 +191,20 @@ export default function ProjectClient({
         </p>
       )}
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <ViewToggle view={view} setView={setView} />
+        <ViewToggle
+          view={raidView ? "" : view}
+          setView={(v) => {
+            setRaidView(false);
+            setView(v);
+          }}
+        />
+        <button
+          className={buttonClass}
+          aria-pressed={raidView}
+          onClick={() => setRaidView(true)}
+        >
+          RAID
+        </button>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -225,158 +241,201 @@ export default function ProjectClient({
           />
         </section>
       )}
-      <div className="space-y-6">
-        {packages.map((w) => {
-          const tasks = tracker.data.tasks.filter(
-            (t) =>
-              t.work_package_id === w.id && (showArchived || !t.archived_at),
-          );
-          return (
-            <section className={panelClass} key={w.id}>
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-semibold">
-                    {w.name}
-                    {w.archived_at && (
-                      <span className="ml-2 text-xs text-neutral-500">
-                        Archived
-                      </span>
+      {raidView ? (
+        <Raid tracker={tracker} showArchived={showArchived} />
+      ) : (
+        <div className="space-y-6">
+          {packages.map((w) => {
+            const tasks = tracker.data.tasks.filter(
+              (t) =>
+                t.work_package_id === w.id && (showArchived || !t.archived_at),
+            );
+            return (
+              <section className={panelClass} key={w.id}>
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <h2 className="font-semibold">
+                      {w.name}
+                      {w.archived_at && (
+                        <span className="ml-2 text-xs text-neutral-500">
+                          Archived
+                        </span>
+                      )}
+                    </h2>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {label(w.status)} · Target: {w.target_date ?? "Not set"}
+                    </p>
+                  </div>
+                  <Progress
+                    tasks={tracker.data.tasks.filter(
+                      (t) => t.work_package_id === w.id,
                     )}
-                  </h2>
-                  <p className="mt-1 text-xs text-neutral-500">
-                    {label(w.status)} · Target: {w.target_date ?? "Not set"}
-                  </p>
-                </div>
-                <Progress
-                  tasks={tracker.data.tasks.filter(
-                    (t) => t.work_package_id === w.id,
-                  )}
-                />
-                <OwnerOnly>
-                  <div className="flex gap-2">
-                    <WriteButton
-                      disabled={!!project.archived_at}
-                      className={buttonClass}
-                      onClick={() =>
-                        setEditingPackage(editingPackage === w.id ? null : w.id)
-                      }
-                    >
-                      Edit
-                    </WriteButton>
-                    <WriteButton
-                      disabled={tracker.busy || !!project.archived_at}
-                      className={buttonClass}
-                      onClick={() =>
-                        tracker.mutate(`/api/work-packages/${w.id}`, "PATCH", {
-                          archived: !w.archived_at,
-                        })
-                      }
-                    >
-                      {w.archived_at ? "Restore" : "Archive"}
-                    </WriteButton>
-                  </div>
-                </OwnerOnly>
-              </div>
-              {w.acceptance_criteria && (
-                <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
-                  {w.acceptance_criteria}
-                </p>
-              )}
-              {editingPackage === w.id && (
-                <div className="mb-6">
-                  <RecordForm
-                    fields={packageFields}
-                    values={{ ...w }}
-                    busy={tracker.busy}
-                    save={async (values) => {
-                      if (
-                        await tracker.mutate(
-                          `/api/work-packages/${w.id}`,
-                          "PATCH",
-                          values,
-                        )
-                      )
-                        setEditingPackage(null);
-                    }}
                   />
+                  <OwnerOnly>
+                    <div className="flex gap-2">
+                      <WriteButton
+                        disabled={!!project.archived_at}
+                        className={buttonClass}
+                        onClick={() =>
+                          setEditingPackage(
+                            editingPackage === w.id ? null : w.id,
+                          )
+                        }
+                      >
+                        Edit
+                      </WriteButton>
+                      <WriteButton
+                        disabled={tracker.busy || !!project.archived_at}
+                        className={buttonClass}
+                        onClick={() =>
+                          tracker.mutate(
+                            `/api/work-packages/${w.id}`,
+                            "PATCH",
+                            {
+                              archived: !w.archived_at,
+                            },
+                          )
+                        }
+                      >
+                        {w.archived_at ? "Restore" : "Archive"}
+                      </WriteButton>
+                    </div>
+                  </OwnerOnly>
                 </div>
-              )}
-              <div>
-                {view === "list" ? (
-                  tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      {...actions}
-                      busy={
-                        actions.busy || !!project.archived_at || !!w.archived_at
-                      }
-                    />
-                  ))
-                ) : (
-                  <div className="overflow-x-auto">
-                    <TaskBoard
-                      rows={tasks.map((task) => ({
-                        task,
-                        workPackage: w,
-                        project,
-                      }))}
-                      {...actions}
-                      busy={
-                        actions.busy || !!project.archived_at || !!w.archived_at
-                      }
+                <Evidence item={w} />
+                {w.acceptance_criteria && (
+                  <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
+                    {w.acceptance_criteria}
+                  </p>
+                )}
+                {editingPackage === w.id && (
+                  <div className="mb-6">
+                    <RecordForm
+                      fields={packageFields}
+                      values={{ ...w }}
+                      busy={tracker.busy}
+                      save={async (values) => {
+                        if (
+                          await tracker.mutate(
+                            `/api/work-packages/${w.id}`,
+                            "PATCH",
+                            values,
+                          )
+                        )
+                          setEditingPackage(null);
+                      }}
                     />
                   </div>
                 )}
-                {!tasks.length && view === "list" && (
-                  <p className="py-4 text-sm text-neutral-500">
-                    No tasks in this work package.
-                  </p>
-                )}
-                <OwnerOnly>
-                  <fieldset disabled={!!project.archived_at || !!w.archived_at}>
-                    <form
-                      onSubmit={(event) => quickAdd(event, w)}
-                      className="mt-4 flex flex-wrap items-end gap-2"
+                <div>
+                  {view === "list" ? (
+                    tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        {...actions}
+                        busy={
+                          actions.busy ||
+                          !!project.archived_at ||
+                          !!w.archived_at
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <TaskBoard
+                        rows={tasks.map((task) => ({
+                          task,
+                          workPackage: w,
+                          project,
+                        }))}
+                        {...actions}
+                        busy={
+                          actions.busy ||
+                          !!project.archived_at ||
+                          !!w.archived_at
+                        }
+                      />
+                    </div>
+                  )}
+                  {!tasks.length && view === "list" && (
+                    <p className="py-4 text-sm text-neutral-500">
+                      No tasks in this work package.
+                    </p>
+                  )}
+                  <OwnerOnly>
+                    <fieldset
+                      disabled={!!project.archived_at || !!w.archived_at}
                     >
-                      <label className="min-w-40 flex-1 text-xs text-neutral-500">
-                        Quick add
-                        <WriteInput
-                          aria-label={`New task in ${w.name}`}
-                          name="title"
-                          placeholder="What needs to happen?"
-                          required
-                          className={`${inputClass} mt-1`}
-                        />
-                      </label>
-                      <label className="text-xs text-neutral-500">
-                        Due date
-                        <WriteInput
-                          name="due_date"
-                          type="date"
-                          className={`${inputClass} mt-1`}
-                        />
-                      </label>
-                      <WriteButton
-                        type="submit"
-                        disabled={tracker.busy}
-                        className={buttonClass}
+                      <form
+                        onSubmit={(event) => quickAdd(event, w)}
+                        className="mt-4 flex flex-wrap items-end gap-2"
                       >
-                        Add task
-                      </WriteButton>
-                    </form>
-                  </fieldset>
-                </OwnerOnly>
-              </div>
-            </section>
-          );
-        })}
-        {!packages.length && (
-          <p className="rounded border border-dashed p-10 text-center text-sm text-neutral-500">
-            No work packages yet.
+                        <label className="min-w-40 flex-1 text-xs text-neutral-500">
+                          Quick add
+                          <WriteInput
+                            aria-label={`New task in ${w.name}`}
+                            name="title"
+                            placeholder="What needs to happen?"
+                            required
+                            className={`${inputClass} mt-1`}
+                          />
+                        </label>
+                        <label className="text-xs text-neutral-500">
+                          Due date
+                          <WriteInput
+                            name="due_date"
+                            type="date"
+                            className={`${inputClass} mt-1`}
+                          />
+                        </label>
+                        <WriteButton
+                          type="submit"
+                          disabled={tracker.busy}
+                          className={buttonClass}
+                        >
+                          Add task
+                        </WriteButton>
+                      </form>
+                    </fieldset>
+                  </OwnerOnly>
+                </div>
+              </section>
+            );
+          })}
+          {!packages.length && (
+            <p className="rounded border border-dashed p-10 text-center text-sm text-neutral-500">
+              No work packages yet.
+            </p>
+          )}
+        </div>
+      )}
+      <section className={`${panelClass} mt-8`}>
+        <h2 className="mb-3 font-semibold">Meetings</h2>
+        {tracker.data.meetings.map((m) => (
+          <p key={m.id}>
+            <Link
+              className="text-sm underline"
+              href={`/meetings/${m.id}/review`}
+            >
+              {m.name}
+            </Link>
           </p>
+        ))}
+        {!tracker.data.meetings.length && (
+          <p className="text-sm text-neutral-500">No linked meetings yet.</p>
         )}
-      </div>
+        <OwnerOnly>
+          {!project.archived_at && (
+            <Link
+              className={`${buttonClass} mt-4 inline-block`}
+              href={`/meetings/new?projectId=${project.id}`}
+            >
+              New meeting for this project
+            </Link>
+          )}
+        </OwnerOnly>
+      </section>
       <section className="mt-10">
         <h2 className="mb-4 text-lg font-semibold">Recent activity</h2>
         {!tracker.data.events.length && (
@@ -396,9 +455,13 @@ export default function ProjectClient({
                       ? (tracker.data.workPackages.find(
                           (w) => w.id === event.entity_id,
                         )?.name ?? "Work package")
-                      : (tracker.data.tasks.find(
-                          (t) => t.id === event.entity_id,
-                        )?.title ?? "Task")}
+                      : event.entity_type === "raid_item"
+                        ? (tracker.data.raidItems.find(
+                            (r) => r.id === event.entity_id,
+                          )?.title ?? "RAID item")
+                        : (tracker.data.tasks.find(
+                            (t) => t.id === event.entity_id,
+                          )?.title ?? "Task")}
                 </span>{" "}
                 · {label(event.action)}{" "}
                 <span className="ml-2 text-xs text-neutral-500">

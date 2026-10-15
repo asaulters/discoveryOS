@@ -4,7 +4,11 @@
  * dependency added to the project.
  * Run with: npx tsx lib/patterns/patternFit.selftest.ts
  */
-import { scoreAllPatternFits, type PatternFitInput, type PatternFitLevel } from "./patternFit";
+import {
+  scoreAllPatternFits,
+  type PatternFitInput,
+  type PatternFitLevel,
+} from "./patternFit";
 import type { Meeting } from "@/lib/types/database";
 
 let passCount = 0;
@@ -39,6 +43,7 @@ function makeMeeting(overrides: Partial<Meeting> = {}): Meeting {
     id: "00000000-0000-0000-0000-000000000000",
     name: "Test meeting",
     company: null,
+    project_id: null,
     meeting_type: "applied_ai_discovery",
     discovery_strategy: "deep_validation",
     goal: null,
@@ -66,7 +71,10 @@ function baseInput(overrides: Partial<PatternFitInput> = {}): PatternFitInput {
   };
 }
 
-function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: string) {
+function fitFor(
+  results: ReturnType<typeof scoreAllPatternFits>,
+  patternId: string,
+) {
   const found = results.find((r) => r.patternId === patternId);
   if (!found) throw new Error(`No result for pattern ${patternId}`);
   return found;
@@ -88,12 +96,12 @@ function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: stri
   check(
     "1. intake_triage_assistant ranks possible/strong",
     atLeast(intake.fitLevel, "possible"),
-    intake
+    intake,
   );
   check(
     "1. completeness_checker ranks possible/strong",
     atLeast(completeness.fitLevel, "possible"),
-    completeness
+    completeness,
   );
 }
 
@@ -109,7 +117,11 @@ function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: stri
   });
   const results = scoreAllPatternFits(input);
   const rules = fitFor(results, "rules_automation");
-  check("2. rules_automation ranks possible/strong", atLeast(rules.fitLevel, "possible"), rules);
+  check(
+    "2. rules_automation ranks possible/strong",
+    atLeast(rules.fitLevel, "possible"),
+    rules,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +136,11 @@ function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: stri
   });
   const results = scoreAllPatternFits(input);
   const reporting = fitFor(results, "reporting_visibility_layer");
-  check("3. reporting_visibility_layer ranks possible/strong", atLeast(reporting.fitLevel, "possible"), reporting);
+  check(
+    "3. reporting_visibility_layer ranks possible/strong",
+    atLeast(reporting.fitLevel, "possible"),
+    reporting,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -142,12 +158,12 @@ function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: stri
   check(
     "4. tool_using_agent is weak or not_enough_info",
     atMost(toolAgent.fitLevel, "weak"),
-    toolAgent
+    toolAgent,
   );
   check(
     "4. tool_using_agent never reaches possible/strong without explicit permissions",
     !atLeast(toolAgent.fitLevel, "possible"),
-    toolAgent
+    toolAgent,
   );
 }
 
@@ -163,19 +179,25 @@ function fitFor(results: ReturnType<typeof scoreAllPatternFits>, patternId: stri
   });
   const results = scoreAllPatternFits(input);
   const noBuild = fitFor(results, "no_build_process_fix");
-  check("5. no_build_process_fix ranks possible/strong", atLeast(noBuild.fitLevel, "possible"), noBuild);
+  check(
+    "5. no_build_process_fix ranks possible/strong",
+    atLeast(noBuild.fitLevel, "possible"),
+    noBuild,
+  );
 }
 
 // ---------------------------------------------------------------------------
 // 6. Thin evidence should never produce a "strong" verdict
 // ---------------------------------------------------------------------------
 {
-  const input = baseInput({ meeting: makeMeeting({ goal: "Explore automation." }) });
+  const input = baseInput({
+    meeting: makeMeeting({ goal: "Explore automation." }),
+  });
   const results = scoreAllPatternFits(input);
   check(
     "6. no pattern reaches 'strong' from near-empty discovery evidence",
     results.every((r) => r.fitLevel !== "strong"),
-    results.map((r) => `${r.patternId}:${r.fitLevel}`)
+    results.map((r) => `${r.patternId}:${r.fitLevel}`),
   );
 }
 

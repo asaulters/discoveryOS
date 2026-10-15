@@ -36,7 +36,13 @@ function NavLink({
   );
 }
 
-export default function Nav({ signedIn }: { signedIn: boolean }) {
+export default function Nav({
+  signedIn,
+  role,
+}: {
+  signedIn: boolean;
+  role: string | null;
+}) {
   const pathname = usePathname();
 
   if (pathname === "/login") return null;
@@ -47,14 +53,29 @@ export default function Nav({ signedIn }: { signedIn: boolean }) {
         <Link href="/" className="font-semibold">
           DiscoveryOS
         </Link>
-        <NavLink href="/my-week" label="My week" active={pathname === "/my-week"} />
-        <NavLink href="/projects" label="Projects" active={pathname.startsWith("/projects")} />
-        <NavLink href="/" label="Dashboard" title="All meetings" active={pathname === "/"} />
-        <OwnerOnly><NavLink
-          href="/meetings/new"
-          label="New Meeting"
-          active={pathname === "/meetings/new"}
-        /></OwnerOnly>
+        <NavLink
+          href="/my-week"
+          label="My week"
+          active={pathname === "/my-week"}
+        />
+        <NavLink
+          href="/projects"
+          label="Projects"
+          active={pathname.startsWith("/projects")}
+        />
+        <NavLink
+          href="/"
+          label="Dashboard"
+          title="All meetings"
+          active={pathname === "/"}
+        />
+        <OwnerOnly>
+          <NavLink
+            href="/meetings/new"
+            label="New Meeting"
+            active={pathname === "/meetings/new"}
+          />
+        </OwnerOnly>
         <NavLink
           href="/pilot"
           label="Pilot"
@@ -67,7 +88,16 @@ export default function Nav({ signedIn }: { signedIn: boolean }) {
           title="Scenario QA"
           active={pathname === "/regression"}
         />
-        {signedIn && <form action="/auth/signout" method="post" className="ml-auto"><button type="submit">Sign out</button></form>}
+        {signedIn && (
+          <span className="ml-auto text-xs text-neutral-500">
+            {role === "owner" ? "Owner" : "Viewer (read only)"}
+          </span>
+        )}
+        {signedIn && (
+          <form action="/auth/signout" method="post">
+            <button type="submit">Sign out</button>
+          </form>
+        )}
       </nav>
     </header>
   );

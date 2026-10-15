@@ -1,3 +1,4 @@
+import { seedDiscovery } from "./discovery-seed.mjs";
 // Isolated Supabase protocol fixture. Never connects to a hosted project.
 import fs from "node:fs";
 import http from "node:http";
@@ -115,7 +116,9 @@ let queue = Promise.resolve();
       return send(res, 200, { keys: [] });
     if (url.pathname === "/__reset") {
       queue = queue.then(async () => {
-        await db.exec("truncate project_events,tasks,work_packages,projects");
+        await db.exec(
+          "truncate project_events,tasks,work_packages,raid_items,projects,meetings cascade",
+        );
         send(res, 200, { ok: true });
       });
       return;
@@ -152,6 +155,16 @@ let queue = Promise.resolve();
         });
       return;
     }
+    if (url.pathname === "/__seed-discovery") {
+      queue = queue.then(async () => {
+        try {
+          send(res, 200, await seedDiscovery(db));
+        } catch (e) {
+          send(res, 500, { error: e.message });
+        }
+      });
+      return;
+    }
     if (url.pathname === "/__inspect") {
       queue = queue.then(async () => {
         const counts = {};
@@ -160,6 +173,7 @@ let queue = Promise.resolve();
           "work_packages",
           "tasks",
           "project_events",
+          "raid_items",
         ])
           counts[table] = (
             await db.query("select count(*)::int as n from " + ident(table))
@@ -185,12 +199,26 @@ let queue = Promise.resolve();
             return send(res, 200, r.rows[0].role);
           }
           const table = url.pathname.replace("/rest/v1/", "");
-          if (
-            !["projects", "work_packages", "tasks", "project_events"].includes(
-              table,
+          if (url.pathname === "/rest/v1/rpc/send_to_project") {
+            const body = JSON.parse(raw),
+              r = await db.query(
+                "select public.send_to_project($1,$2,$3::jsonb,$4) as result",
+                [
+                  body.p_meeting_id,
+                  body.p_project_id,
+                  JSON.stringify(body.p_items),
+                  body.p_work_package_id || null,
+                ],
+              );
+            await db.exec("commit");
+            return send(res, 200, r.rows[0].result);
+          }
+          const allowed = (
+            await db.query(
+              "select tablename from pg_tables where schemaname = 'public'",
             )
-          )
-            throw Error("Unknown table");
+          ).rows.map((r) => r.tablename);
+          if (!allowed.includes(table)) throw Error("Unknown table");
           const params = [],
             conditions = [];
           for (const [k, v] of url.searchParams) {

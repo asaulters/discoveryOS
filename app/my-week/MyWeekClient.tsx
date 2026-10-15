@@ -1,4 +1,5 @@
 "use client";
+import AddTask from "@/app/tracker/AddTask";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -64,6 +65,7 @@ export default function MyWeekClient({
           All projects →
         </Link>
       </header>
+      <AddTask tracker={tracker} />
       {tracker.error && (
         <p role="alert" className="mb-4 text-sm text-red-700">
           {tracker.error}

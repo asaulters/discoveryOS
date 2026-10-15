@@ -5076,3 +5076,31 @@ route/method checks passed again. SETUP.md includes the acceptance record.
 Post-migration DiscoveryOS regression run
 `fc9c7863-f5fe-4112-8ba8-1f32e3dd8d0b` also completed unchanged:
 10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.
+
+## Sprint 35: meetings connected to projects
+
+Added 0037–0039: optional meeting/project links and source keys, RAID with
+owner/viewer RLS and tracker events, partial source uniqueness, and one
+owner-checked security-invoker batch RPC. The RPC validates sources against
+the meeting's stored latest review/successful assessment or its workflow
+and possible mismatches, copies evidence/certainty, reuses Discovery
+follow-ups, and links unassigned meetings. Any failure rolls back the
+entire batch, fallback package, link and audit events. No new AI calls or
+service role usage. Decisions never change project stage automatically.
+
+Review and Workflow now have an owner-only source checklist and grouped,
+editable preview. Projects include Meetings, project-prefilled meeting
+creation and RAID by kind. Shared evidence blocks cover task rows/cards,
+the task pane, work packages and RAID, including No quote/Meeting deleted.
+My week adds owner task entry; nav displays the current role.
+
+Validation: typecheck, lint, production build, the 71 existing self-tests,
+tracker model and request-origin checks, 35-table isolated PostgreSQL/RLS suite and isolated
+browser scenario passed. Browser acceptance covers one five-item batch in
+under five minutes, title/certainty editing, duplicate disabling, explicit
+Decide click, saved meeting project_id/prefill, RAID add/status, My week
+add, copied evidence surviving deletion and viewer API/direct REST denial.
+All 89 signed-out route/method checks passed. Existing hosted regression
+run fc99d451-aa1a-4b3d-b500-27e53cc098f9 remained 10 pass / 22 warn / 0 fail.
+Hosted migration application and new-flow acceptance remain pending Adam
+running the three whole SQL files in order; SETUP.md documents this.

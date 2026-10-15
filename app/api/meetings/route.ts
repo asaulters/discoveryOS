@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createMeeting } from "@/lib/services/meetings";
-import type { ConfidenceLevel, DiscoveryStrategy, MeetingType } from "@/lib/types/database";
+import type {
+  ConfidenceLevel,
+  DiscoveryStrategy,
+  MeetingType,
+} from "@/lib/types/database";
 
 const MEETING_TYPES: MeetingType[] = [
   "automation_discovery",
@@ -21,6 +25,7 @@ const DISCOVERY_STRATEGIES: DiscoveryStrategy[] = [
 ];
 
 interface CreateMeetingBody {
+  projectId?: string;
   name?: string;
   company?: string;
   meetingType?: string;
@@ -42,17 +47,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  if (
+    body.projectId !== undefined &&
+    (typeof body.projectId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        body.projectId,
+      ))
+  )
+    return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
+
   if (!body.name?.trim() || !body.meetingType?.trim()) {
     return NextResponse.json(
       { error: "name and meetingType are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (!MEETING_TYPES.includes(body.meetingType as MeetingType)) {
     return NextResponse.json(
       { error: `meetingType must be one of: ${MEETING_TYPES.join(", ")}` },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -61,17 +75,21 @@ export async function POST(request: NextRequest) {
     !DISCOVERY_STRATEGIES.includes(body.discoveryStrategy as DiscoveryStrategy)
   ) {
     return NextResponse.json(
-      { error: `discoveryStrategy must be one of: ${DISCOVERY_STRATEGIES.join(", ")}` },
-      { status: 400 }
+      {
+        error: `discoveryStrategy must be one of: ${DISCOVERY_STRATEGIES.join(", ")}`,
+      },
+      { status: 400 },
     );
   }
 
   try {
     const result = await createMeeting({
       name: body.name,
+      projectId: body.projectId,
       company: body.company,
       meetingType: body.meetingType as MeetingType,
-      discoveryStrategy: body.discoveryStrategy as DiscoveryStrategy | undefined,
+      discoveryStrategy: body.discoveryStrategy as
+        DiscoveryStrategy | undefined,
       goal: body.goal,
       currentUnderstanding: body.currentUnderstanding,
       tentativeBuildDirection: body.tentativeBuildDirection,
@@ -83,7 +101,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to create meeting";
+    const message =
+      err instanceof Error ? err.message : "Failed to create meeting";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

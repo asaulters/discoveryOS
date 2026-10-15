@@ -1,4 +1,5 @@
 "use client";
+import Evidence from "./Evidence";
 
 import {
   useEffect,
@@ -299,6 +300,9 @@ export function TaskRow({
         {task.due_date ?? "No date"}
       </span>
       <TaskStatusMenu task={task} busy={busy} change={change} />
+      <div className="w-full">
+        <Evidence item={task} />
+      </div>
       {task.status === "blocked" && (
         <p className="w-full text-xs text-amber-700 dark:text-amber-400">
           Blocked: {task.blocked_reason}
@@ -353,6 +357,7 @@ export function TaskBoard({
                     {row.task.due_date ?? "No date"}
                     {row.task.archived_at ? " · Archived" : ""}
                   </p>
+                  <Evidence item={row.task} />
                   <TaskStatusMenu
                     task={row.task}
                     busy={
@@ -465,19 +470,7 @@ export function TaskPane({
           Restore the project and work package to edit this task.
         </p>
       )}
-      {(task.evidence_quote || task.certainty) && (
-        <section className="mt-8 border-t pt-4">
-          <h3 className="text-sm font-semibold">Evidence</h3>
-          {task.certainty && (
-            <p className="mt-2 text-sm">Certainty: {task.certainty}</p>
-          )}
-          {task.evidence_quote && (
-            <blockquote className="mt-2 whitespace-pre-wrap border-l-2 pl-3 text-sm text-neutral-500">
-              {task.evidence_quote}
-            </blockquote>
-          )}
-        </section>
-      )}
+      <Evidence item={task} />
     </dialog>
   );
 }

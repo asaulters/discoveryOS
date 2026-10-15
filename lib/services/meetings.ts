@@ -1,5 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { ensureDefaultActiveThread, seedDefaultQueuedThreadsIfEmpty } from "@/lib/services/threads";
+import {
+  ensureDefaultActiveThread,
+  seedDefaultQueuedThreadsIfEmpty,
+} from "@/lib/services/threads";
 import { logUserAction } from "@/lib/services/userActions";
 import type {
   Assumption,
@@ -11,6 +14,7 @@ import type {
 } from "@/lib/types/database";
 
 export interface CreateMeetingInput {
+  projectId?: string | null;
   name: string;
   company?: string | null;
   meetingType: MeetingType;
@@ -31,14 +35,25 @@ export interface MeetingWithDetails {
 }
 
 export async function createMeeting(
-  input: CreateMeetingInput
+  input: CreateMeetingInput,
 ): Promise<MeetingWithDetails> {
   const supabase = await createServerSupabaseClient();
+
+  if (input.projectId) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", input.projectId)
+      .is("archived_at", null)
+      .maybeSingle();
+    if (error || !data) throw new Error("Choose an active project");
+  }
 
   const { data: meeting, error: meetingError } = await supabase
     .from("meetings")
     .insert({
       name: input.name,
+      project_id: input.projectId ?? null,
       company: input.company ?? null,
       meeting_type: input.meetingType,
       discovery_strategy: input.discoveryStrategy ?? null,
@@ -58,7 +73,9 @@ export async function createMeeting(
 
   try {
     let assumptions: Assumption[] = [];
-    const assumptionRows = (input.assumptions ?? []).filter((a) => a.text.trim());
+    const assumptionRows = (input.assumptions ?? []).filter((a) =>
+      a.text.trim(),
+    );
     if (assumptionRows.length > 0) {
       const { data, error } = await supabase
         .from("assumptions")
@@ -67,7 +84,7 @@ export async function createMeeting(
             meeting_id: meeting.id,
             text: a.text,
             confidence_level: a.confidenceLevel ?? "unclear",
-          }))
+          })),
         )
         .select();
 
@@ -108,7 +125,7 @@ export async function createMeeting(
 }
 
 export async function getMeetingWithDetails(
-  meetingId: string
+  meetingId: string,
 ): Promise<MeetingWithDetails | null> {
   const supabase = await createServerSupabaseClient();
 
@@ -125,19 +142,21 @@ export async function getMeetingWithDetails(
     return null;
   }
 
-  const [{ data: assumptions, error: assumptionsError }, { data: contextItems, error: contextError }] =
-    await Promise.all([
-      supabase
-        .from("assumptions")
-        .select("*")
-        .eq("meeting_id", meetingId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("meeting_context_items")
-        .select("*")
-        .eq("meeting_id", meetingId)
-        .order("created_at", { ascending: true }),
-    ]);
+  const [
+    { data: assumptions, error: assumptionsError },
+    { data: contextItems, error: contextError },
+  ] = await Promise.all([
+    supabase
+      .from("assumptions")
+      .select("*")
+      .eq("meeting_id", meetingId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("meeting_context_items")
+      .select("*")
+      .eq("meeting_id", meetingId)
+      .order("created_at", { ascending: true }),
+  ]);
 
   if (assumptionsError) {
     throw new Error(`Failed to load assumptions: ${assumptionsError.message}`);

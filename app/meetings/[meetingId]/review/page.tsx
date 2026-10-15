@@ -1,10 +1,17 @@
+import SendToProject from "../../SendToProject";
 import { notFound } from "next/navigation";
 import { getMeetingWithDetails } from "@/lib/services/meetings";
 import { getLatestPostMeetingReview } from "@/lib/services/postMeetingReviews";
-import { defaultPilotReadiness, getPilotReadiness } from "@/lib/services/pilotReadiness";
+import {
+  defaultPilotReadiness,
+  getPilotReadiness,
+} from "@/lib/services/pilotReadiness";
 import { listPilotIssuesForMeeting } from "@/lib/services/pilotIssues";
 import { getLatestAppliedAiOpportunityAssessment } from "@/lib/services/appliedAiOpportunityAssessment";
-import { defaultFieldTest, getFieldTestForMeeting } from "@/lib/services/fieldTests";
+import {
+  defaultFieldTest,
+  getFieldTestForMeeting,
+} from "@/lib/services/fieldTests";
 import ReviewSection from "./ReviewSection";
 import ExportPanel from "./ExportPanel";
 import PilotChecklistSection from "./PilotChecklistSection";
@@ -20,7 +27,14 @@ export default async function MeetingReviewPage({
 }) {
   const { meetingId } = await params;
 
-  const [details, review, pilotReadiness, pilotIssues, appliedAiAssessment, fieldTest] = await Promise.all([
+  const [
+    details,
+    review,
+    pilotReadiness,
+    pilotIssues,
+    appliedAiAssessment,
+    fieldTest,
+  ] = await Promise.all([
     getMeetingWithDetails(meetingId),
     getLatestPostMeetingReview(meetingId),
     // Never let pilot readiness (Sprint 18) fail the whole review page.
@@ -74,16 +88,23 @@ export default async function MeetingReviewPage({
         </p>
 
         <div className="mt-4 space-y-6">
-          <PilotChecklistSection meetingId={meeting.id} initialReadiness={pilotReadiness} />
+          <PilotChecklistSection
+            meetingId={meeting.id}
+            initialReadiness={pilotReadiness}
+          />
           <TrackedPilotIssuesSection
             meetingId={meeting.id}
             initialIssues={pilotIssues}
             issuesObservedText={pilotReadiness.issues_observed}
             sourcePilotNoteId={pilotReadiness.id}
           />
-          <FieldTestDebriefSection meetingId={meeting.id} initialFieldTest={fieldTest} />
+          <FieldTestDebriefSection
+            meetingId={meeting.id}
+            initialFieldTest={fieldTest}
+          />
         </div>
       </div>
+      <SendToProject meetingId={meetingId} />
     </main>
   );
 }

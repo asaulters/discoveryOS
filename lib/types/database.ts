@@ -1,7 +1,14 @@
-import type { Project, WorkPackage, Task, ProjectEvent } from "@/lib/tracker/types";
+import type {
+  Project,
+  WorkPackage,
+  Task,
+  ProjectEvent,
+  RaidItem,
+} from "@/lib/tracker/types";
 import type { IssueCategory } from "@/lib/pilotIssueCategories";
 
-export type MeetingStatus = "prepared" | "live" | "paused" | "completed" | "archived";
+export type MeetingStatus =
+  "prepared" | "live" | "paused" | "completed" | "archived";
 
 export type ConfidenceLevel = "unclear" | "emerging" | "likely" | "confirmed";
 
@@ -16,7 +23,8 @@ export type ThreadStatus =
 
 export type ThreadPriority = "low" | "medium" | "high" | "critical";
 
-export type DirectionStatus = "active" | "used" | "dismissed" | "deferred" | "stale";
+export type DirectionStatus =
+  "active" | "used" | "dismissed" | "deferred" | "stale";
 
 export type MeetingType =
   | "automation_discovery"
@@ -57,9 +65,11 @@ export type ReviewEvidenceType = "known" | "inferred";
 
 export type ReviewPriority = "low" | "medium" | "high" | "critical";
 
-export type AssumptionUpdateStatus = "supported" | "weakened" | "unresolved" | "changed";
+export type AssumptionUpdateStatus =
+  "supported" | "weakened" | "unresolved" | "changed";
 
-export type BuildDirectionStatus = "supported" | "partially_supported" | "weakened" | "needs_reframing";
+export type BuildDirectionStatus =
+  "supported" | "partially_supported" | "weakened" | "needs_reframing";
 
 export type RiskSeverity = "low" | "medium" | "high" | "critical";
 
@@ -97,6 +107,7 @@ export type ContradictionStatus = "open" | "resolved" | "dismissed";
 // relies on to type `.from(...)` calls — silently degrading everything to
 // `never`.
 export type Meeting = {
+  project_id: string | null;
   id: string;
   name: string;
   company: string | null;
@@ -444,7 +455,8 @@ export type ConversationEventType =
   | "topic_signal"
   | "glossed_over_topic";
 
-export type ConversationEventSourceRole = "facilitator" | "stakeholder" | "mixed" | "unknown";
+export type ConversationEventSourceRole =
+  "facilitator" | "stakeholder" | "mixed" | "unknown";
 
 export type ConversationEventConfidence = "low" | "medium" | "high";
 
@@ -531,7 +543,8 @@ export type ScenarioReplayRun = {
   updated_at: string;
 };
 
-export type BatchRegressionRunStatus = "running" | "completed" | "failed" | "partial";
+export type BatchRegressionRunStatus =
+  "running" | "completed" | "failed" | "partial";
 
 /**
  * Sprint 22: one row per "run these scenarios" batch click - aggregates
@@ -555,7 +568,8 @@ export type BatchRegressionRun = {
   updated_at: string;
 };
 
-export type BatchRegressionRunItemStatus = "pending" | "running" | "completed" | "failed";
+export type BatchRegressionRunItemStatus =
+  "pending" | "running" | "completed" | "failed";
 
 /** Sprint 22: one scenario within a batch_regression_runs batch. */
 export type BatchRegressionRunItem = {
@@ -578,7 +592,8 @@ export type BatchRegressionRunItem = {
   updated_at: string;
 };
 
-export type RecordingMode = "manual_transcript" | "browser_mic" | "mixed" | "none";
+export type RecordingMode =
+  "manual_transcript" | "browser_mic" | "mixed" | "none";
 
 /**
  * Sprint 18: one row per meeting - real-meeting pilot readiness/consent/
@@ -660,7 +675,8 @@ export type AiRunLog = {
 
 export type FieldTestStatus = "planned" | "completed" | "abandoned";
 
-export type FieldTestSuccessDecision = "strong_signal" | "mixed_signal" | "weak_signal" | "not_enough_data";
+export type FieldTestSuccessDecision =
+  "strong_signal" | "mixed_signal" | "weak_signal" | "not_enough_data";
 
 /**
  * Sprint 32: the capture approach a facilitator planned/used for a
@@ -747,6 +763,13 @@ export type RemoteCaptureReadiness = {
 export type Database = {
   public: {
     Tables: {
+      raid_items: {
+        Row: RaidItem;
+        Insert: Partial<RaidItem> &
+          Pick<RaidItem, "project_id" | "kind" | "title">;
+        Update: Partial<RaidItem>;
+        Relationships: [];
+      };
       projects: {
         Row: Project;
         Insert: Partial<Project> & Pick<Project, "name">;
@@ -767,7 +790,11 @@ export type Database = {
       };
       project_events: {
         Row: ProjectEvent;
-        Insert: Partial<ProjectEvent> & Pick<ProjectEvent, "project_id" | "entity_type" | "entity_id" | "action">;
+        Insert: Partial<ProjectEvent> &
+          Pick<
+            ProjectEvent,
+            "project_id" | "entity_type" | "entity_id" | "action"
+          >;
         Update: never;
         Relationships: [];
       };
@@ -798,7 +825,8 @@ export type Database = {
       };
       discovery_threads: {
         Row: DiscoveryThread;
-        Insert: Partial<DiscoveryThread> & Pick<DiscoveryThread, "meeting_id" | "title">;
+        Insert: Partial<DiscoveryThread> &
+          Pick<DiscoveryThread, "meeting_id" | "title">;
         Update: Partial<DiscoveryThread>;
         Relationships: [];
       };
@@ -811,13 +839,15 @@ export type Database = {
       };
       transcript_segments: {
         Row: TranscriptSegment;
-        Insert: Partial<TranscriptSegment> & Pick<TranscriptSegment, "meeting_id" | "raw_text">;
+        Insert: Partial<TranscriptSegment> &
+          Pick<TranscriptSegment, "meeting_id" | "raw_text">;
         Update: Partial<TranscriptSegment>;
         Relationships: [];
       };
       hypotheses: {
         Row: Hypothesis;
-        Insert: Partial<Hypothesis> & Pick<Hypothesis, "meeting_id" | "statement">;
+        Insert: Partial<Hypothesis> &
+          Pick<Hypothesis, "meeting_id" | "statement">;
         Update: Partial<Hypothesis>;
         Relationships: [];
       };
@@ -826,7 +856,10 @@ export type Database = {
         Insert: Partial<PreMeetingBrief> &
           Pick<
             PreMeetingBrief,
-            "meeting_id" | "brief_summary" | "suggested_opening" | "recommended_focus"
+            | "meeting_id"
+            | "brief_summary"
+            | "suggested_opening"
+            | "recommended_focus"
           >;
         Update: Partial<PreMeetingBrief>;
         Relationships: [];
@@ -839,7 +872,8 @@ export type Database = {
       };
       user_actions: {
         Row: UserAction;
-        Insert: Partial<UserAction> & Pick<UserAction, "meeting_id" | "action_type">;
+        Insert: Partial<UserAction> &
+          Pick<UserAction, "meeting_id" | "action_type">;
         Update: Partial<UserAction>;
         Relationships: [];
       };
@@ -865,19 +899,24 @@ export type Database = {
       workflow_components: {
         Row: WorkflowComponent;
         Insert: Partial<WorkflowComponent> &
-          Pick<WorkflowComponent, "workflow_id" | "component_type" | "label" | "normalized_label">;
+          Pick<
+            WorkflowComponent,
+            "workflow_id" | "component_type" | "label" | "normalized_label"
+          >;
         Update: Partial<WorkflowComponent>;
         Relationships: [];
       };
       workflow_gaps: {
         Row: WorkflowGap;
-        Insert: Partial<WorkflowGap> & Pick<WorkflowGap, "workflow_id" | "label" | "normalized_label">;
+        Insert: Partial<WorkflowGap> &
+          Pick<WorkflowGap, "workflow_id" | "label" | "normalized_label">;
         Update: Partial<WorkflowGap>;
         Relationships: [];
       };
       post_meeting_reviews: {
         Row: PostMeetingReview;
-        Insert: Partial<PostMeetingReview> & Pick<PostMeetingReview, "meeting_id">;
+        Insert: Partial<PostMeetingReview> &
+          Pick<PostMeetingReview, "meeting_id">;
         Update: Partial<PostMeetingReview>;
         Relationships: [];
       };
@@ -897,7 +936,10 @@ export type Database = {
       ambiguity_flags: {
         Row: AmbiguityFlag;
         Insert: Partial<AmbiguityFlag> &
-          Pick<AmbiguityFlag, "meeting_id" | "label" | "normalized_label" | "ambiguity_type">;
+          Pick<
+            AmbiguityFlag,
+            "meeting_id" | "label" | "normalized_label" | "ambiguity_type"
+          >;
         Update: Partial<AmbiguityFlag>;
         Relationships: [];
       };
@@ -906,7 +948,12 @@ export type Database = {
         Insert: Partial<ContradictionCandidate> &
           Pick<
             ContradictionCandidate,
-            "meeting_id" | "label" | "description" | "contradiction_type" | "claim_a" | "claim_b"
+            | "meeting_id"
+            | "label"
+            | "description"
+            | "contradiction_type"
+            | "claim_a"
+            | "claim_b"
           >;
         Update: Partial<ContradictionCandidate>;
         Relationships: [];
@@ -914,31 +961,42 @@ export type Database = {
       conversation_events: {
         Row: ConversationEvent;
         Insert: Partial<ConversationEvent> &
-          Pick<ConversationEvent, "meeting_id" | "event_type" | "source_role" | "label" | "normalized_label">;
+          Pick<
+            ConversationEvent,
+            | "meeting_id"
+            | "event_type"
+            | "source_role"
+            | "label"
+            | "normalized_label"
+          >;
         Update: Partial<ConversationEvent>;
         Relationships: [];
       };
       regression_runs: {
         Row: RegressionRun;
-        Insert: Partial<RegressionRun> & Pick<RegressionRun, "meeting_id" | "scenario_id">;
+        Insert: Partial<RegressionRun> &
+          Pick<RegressionRun, "meeting_id" | "scenario_id">;
         Update: Partial<RegressionRun>;
         Relationships: [];
       };
       regression_checks: {
         Row: RegressionCheck;
-        Insert: Partial<RegressionCheck> & Pick<RegressionCheck, "regression_run_id" | "category" | "label">;
+        Insert: Partial<RegressionCheck> &
+          Pick<RegressionCheck, "regression_run_id" | "category" | "label">;
         Update: Partial<RegressionCheck>;
         Relationships: [];
       };
       scenario_replay_runs: {
         Row: ScenarioReplayRun;
-        Insert: Partial<ScenarioReplayRun> & Pick<ScenarioReplayRun, "scenario_id">;
+        Insert: Partial<ScenarioReplayRun> &
+          Pick<ScenarioReplayRun, "scenario_id">;
         Update: Partial<ScenarioReplayRun>;
         Relationships: [];
       };
       meeting_pilot_notes: {
         Row: MeetingPilotNotes;
-        Insert: Partial<MeetingPilotNotes> & Pick<MeetingPilotNotes, "meeting_id">;
+        Insert: Partial<MeetingPilotNotes> &
+          Pick<MeetingPilotNotes, "meeting_id">;
         Update: Partial<MeetingPilotNotes>;
         Relationships: [];
       };
@@ -956,7 +1014,8 @@ export type Database = {
       };
       batch_regression_run_items: {
         Row: BatchRegressionRunItem;
-        Insert: Partial<BatchRegressionRunItem> & Pick<BatchRegressionRunItem, "batch_run_id" | "scenario_id">;
+        Insert: Partial<BatchRegressionRunItem> &
+          Pick<BatchRegressionRunItem, "batch_run_id" | "scenario_id">;
         Update: Partial<BatchRegressionRunItem>;
         Relationships: [];
       };
@@ -968,14 +1027,33 @@ export type Database = {
       };
       remote_capture_readiness: {
         Row: RemoteCaptureReadiness;
-        Insert: Partial<RemoteCaptureReadiness> & Pick<RemoteCaptureReadiness, "meeting_id">;
+        Insert: Partial<RemoteCaptureReadiness> &
+          Pick<RemoteCaptureReadiness, "meeting_id">;
         Update: Partial<RemoteCaptureReadiness>;
         Relationships: [];
       };
     };
     Views: Record<string, never>;
     Functions: {
-      current_user_role: { Args: Record<string, never>; Returns: string | null };
+      send_to_project: {
+        Args: {
+          p_meeting_id: string;
+          p_project_id: string;
+          p_items: unknown;
+          p_work_package_id?: string | null;
+        };
+        Returns: {
+          project_id: string;
+          tasks: string[];
+          work_packages: string[];
+          raid_items: string[];
+          has_decision: boolean;
+        };
+      };
+      current_user_role: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
     };
   };
 };

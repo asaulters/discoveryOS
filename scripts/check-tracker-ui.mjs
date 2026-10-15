@@ -64,8 +64,11 @@ try {
     },
   );
   await ready("http://127.0.0.1:3035/login", app);
-  await run("scripts/fixtures/tracker-browser.mjs");
-  await run("scripts/fixtures/tracker-week-browser.mjs");
+  if (!process.env.TRACKER_SEND_ONLY) {
+    await run("scripts/fixtures/tracker-browser.mjs");
+    await run("scripts/fixtures/tracker-week-browser.mjs");
+  }
+  await run("scripts/fixtures/discovery-send-browser.mjs");
   console.log("PASS: isolated tracker browser/API/RLS acceptance suite.");
 } finally {
   await Promise.all(

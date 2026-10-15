@@ -6,6 +6,7 @@ import type {
   Project,
   WorkPackage,
   Task,
+  RaidItem,
 } from "@/lib/tracker/types";
 import {
   projectCreate,
@@ -15,6 +16,8 @@ import {
   taskCreate,
   taskPatch,
   entityId,
+  raidCreate,
+  raidPatch,
 } from "@/lib/tracker/validation";
 
 export class TrackerError extends Error {
@@ -29,11 +32,13 @@ function check(error: { message: string; code?: string } | null) {
   if (error)
     throw new TrackerError(
       error.message,
-      error.code === "42501"
-        ? 403
-        : ["23514", "23503", "22P02"].includes(error.code ?? "")
-          ? 400
-          : 500,
+      error.code === "23505"
+        ? 409
+        : error.code === "42501"
+          ? 403
+          : ["23514", "23503", "22P02", "22023"].includes(error.code ?? "")
+            ? 400
+            : 500,
     );
 }
 // PostgREST caps each response. Page through rows so counts and My week never
@@ -66,7 +71,14 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
   const projects = await allRows<Project>(query);
   const ids = projects.map((p) => p.id);
   if (!ids.length)
-    return { projects: [], workPackages: [], tasks: [], events: [] };
+    return {
+      projects: [],
+      workPackages: [],
+      tasks: [],
+      events: [],
+      raidItems: [],
+      meetings: [],
+    };
   const packages = await allRows<WorkPackage>(
     db
       .from("work_packages")
@@ -97,10 +109,33 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
         .limit(100)
     : { data: [], error: null };
   check(events.error);
-  return { projects, workPackages: packages, tasks, events: events.data! };
+  const raidItems = await allRows<RaidItem>(
+    db
+      .from("raid_items")
+      .select("*")
+      .in("project_id", ids)
+      .order("created_at")
+      .order("id"),
+  );
+  const meetings = await allRows<TrackerData["meetings"][number]>(
+    db
+      .from("meetings")
+      .select("id,name,project_id")
+      .in("project_id", ids)
+      .order("created_at")
+      .order("id"),
+  );
+  return {
+    projects,
+    workPackages: packages,
+    tasks,
+    events: events.data!,
+    raidItems,
+    meetings,
+  };
 }
 export async function mutateTracker(
-  kind: "project" | "package" | "task",
+  kind: "project" | "package" | "task" | "raid",
   body: unknown,
   id?: string,
 ) {
@@ -109,6 +144,51 @@ export async function mutateTracker(
   if (auth.role !== "owner") throw new TrackerError("Owner role required", 403);
   if (id) entityId.parse(id);
   const db = await createServerSupabaseClient();
+  if (kind === "raid") {
+    const existing = id
+      ? await db
+          .from("raid_items")
+          .select("project_id")
+          .eq("id", id)
+          .maybeSingle()
+      : null;
+    if (existing) check(existing.error);
+    if (id && !existing?.data)
+      throw new TrackerError("RAID item not found", 404);
+    const projectId =
+      existing?.data?.project_id ?? raidCreate.parse(body).project_id;
+    const parent = await db
+      .from("projects")
+      .select("archived_at")
+      .eq("id", projectId)
+      .maybeSingle();
+    check(parent.error);
+    if (!parent.data || parent.data.archived_at)
+      throw new TrackerError("Choose an active project", 409);
+    if (!id) {
+      const r = await db
+        .from("raid_items")
+        .insert(raidCreate.parse(body))
+        .select()
+        .single();
+      check(r.error);
+      return r.data;
+    }
+    const { archived, ...fields } = raidPatch.parse(body);
+    const r = await db
+      .from("raid_items")
+      .update({
+        ...fields,
+        ...(archived === undefined
+          ? {}
+          : { archived_at: archived ? new Date().toISOString() : null }),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    check(r.error);
+    return r.data;
+  }
   if (kind === "project") {
     if (!id) {
       const input = projectCreate.parse(body);

@@ -33,7 +33,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <RoleProvider role={role}>
-          <Nav signedIn={!!userId} />
+          <Nav signedIn={!!userId} role={role} />
           {children}
         </RoleProvider>
       </body>

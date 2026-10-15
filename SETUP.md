@@ -1,7 +1,7 @@
 # Public hosting setup (Sprint 33)
 
 1. Apply every SQL migration in `supabase/migrations/` in filename order,
-   through `0036_project_events.sql`, before exposing the app publicly.
+   through `0039_send_to_project.sql`, before exposing the app publicly.
 2. In Supabase Dashboard → Authentication → Users, create Adam's owner user
    and a viewer user with email/password. Confirm their email addresses in
    the dashboard. Copy their user UUIDs and run this in the SQL editor:
@@ -194,3 +194,71 @@ test sessions were revoked. All 85 signed-out route checks passed again.
 Post-migration DiscoveryOS regression run
 `fc9c7863-f5fe-4112-8ba8-1f32e3dd8d0b` also completed unchanged:
 10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.
+
+# Meeting-to-project connections (Sprint 35)
+
+After the already-applied Sprint 34 migrations, run each **whole file** in
+Supabase Dashboard → SQL Editor, in this order:
+
+1. `supabase/migrations/0037_meeting_project_link.sql`
+2. `supabase/migrations/0038_raid_items.sql`
+3. `supabase/migrations/0039_send_to_project.sql`
+
+Apply all three before deploying this version. Do not rerun earlier
+migrations. These migrations add the optional meeting/project link, copied
+source keys and unique indexes, RAID with owner/viewer RLS, RAID audit
+events, and the `send_to_project` security-invoker function. No environment
+variables, Auth settings or service role key are added for this sprint.
+Hosted application of these three migrations is still pending.
+
+As an owner, open a meeting's Review or Workflow page and find **Send to
+project**. Pick a project (or create one there), tick the source items,
+optionally edit titles and certainty, then send once. Tasks default to the
+project's reusable **Discovery follow-ups** work package. Evidence and
+source details are read from the database and copied by one atomic RPC;
+a duplicate or invalid source rolls back the entire batch, its fallback
+package, events and meeting link. Already-sent active items are disabled,
+even if their destination is another project. Archiving the copied row
+allows sending that source again.
+
+Review array items use the review row id plus their array/index key.
+Regenerating a review or assessment produces new source identities; it
+does not rewrite copied tracker items. A stale selection is rejected;
+use **Refresh items** after regenerating. An unlinked meeting is linked
+on a successful send. A linked meeting keeps its original link even when
+a particular batch is sent to a different project. Sending a decision
+only offers **Move project to Decide?**; stage changes require that click.
+No AI calls are made by these flows.
+
+Project pages show linked meetings, a **New meeting for this project**
+link with project/name/company/goal prefilled, and a **RAID** view grouped
+by kind. Owner accounts can add RAID items and change their status.
+**My week → Add task** defaults to Discovery follow-ups or the first active
+work package; it creates Discovery follow-ups when there are none.
+An optional due date makes a new to-do appear in the upcoming week;
+undated to-dos remain on the project, consistent with the existing week
+filter. Viewers can read evidence and RAID but cannot send or write.
+
+Deleting a source meeting preserves copied tasks, work packages and RAID
+items, quotes, certainty and source keys. Their meeting link becomes
+**Meeting deleted**. Tracker records continue to use archive/restore.
+
+Validation uses `npm run typecheck`, `npm run lint`, the 71 existing
+self-tests, `npm run test:auth-rls`, `npm run test:signed-out`,
+`npm run test:request-origin`, `npm run test:tracker-model` and
+`npm run test:tracker-ui`. The extended SQL suite applies migrations
+0001–0039 to isolated PostgreSQL and verifies all 35 application tables,
+all source mappings, non-owner RPC rejection, duplicate blocking, complete
+rollback, fallback reuse and copied records surviving meeting deletion.
+The isolated browser scenario sends five items (follow-up, gap, mismatch,
+recommendation and experiment) in one batch in under five minutes,
+checks editable preview, evidence, explicit stage changes, saved project
+prefill, My week add, RAID status/add and viewer API/direct REST denial.
+All fixture data stays local and OpenAI credentials are absent.
+
+The existing hosted database-backed regression was rerun on October 15,
+2026 before applying 0037–0039: run
+`fc99d451-aa1a-4b3d-b500-27e53cc098f9` matched the existing baseline,
+**10 pass, 22 warnings, 0 failures**. All **89** signed-out page/API method
+checks passed. Hosted acceptance of the new flows remains pending the
+three migrations above.

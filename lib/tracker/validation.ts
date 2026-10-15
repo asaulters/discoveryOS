@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { PROJECT_HEALTH, PROJECT_STAGES, TASK_STATUSES } from "./types";
+import {
+  PROJECT_HEALTH,
+  PROJECT_STAGES,
+  TASK_STATUSES,
+  RAID_KINDS,
+  RAID_STATUSES,
+} from "./types";
 const name = z.string().trim().min(1).max(500);
 const text = z.string().max(20000).nullable();
 const date = z.iso.date().nullable();
@@ -58,3 +64,48 @@ export const taskPatch = z
   .partial()
   .strict();
 export const entityId = z.uuid();
+
+const raidFields = {
+  title: name,
+  kind: z.enum(RAID_KINDS),
+  detail: text,
+  owner: text,
+  status: z.enum(RAID_STATUSES),
+};
+export const raidCreate = z
+  .object({ ...raidFields, project_id: z.uuid() })
+  .partial()
+  .required({ title: true, kind: true, project_id: true })
+  .strict();
+export const raidPatch = z
+  .object({ ...raidFields, archived: z.boolean() })
+  .partial()
+  .strict();
+export const sendBatch = z
+  .object({
+    project_id: z.uuid(),
+    work_package_id: z.uuid().nullable().optional(),
+    items: z
+      .array(
+        z
+          .object({
+            source_type: z.enum([
+              "followup",
+              "open_question",
+              "workflow_gap",
+              "mismatch",
+              "risk",
+              "recommendation",
+              "experiment",
+            ]),
+            source_item_id: z.uuid(),
+            source_item_key: z.string().nullable(),
+            title: name.optional(),
+            certainty: z.enum(["known", "inferred", "unknown"]).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
