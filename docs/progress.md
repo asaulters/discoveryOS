@@ -5102,5 +5102,12 @@ Decide click, saved meeting project_id/prefill, RAID add/status, My week
 add, copied evidence surviving deletion and viewer API/direct REST denial.
 All 89 signed-out route/method checks passed. Existing hosted regression
 run fc99d451-aa1a-4b3d-b500-27e53cc098f9 remained 10 pass / 22 warn / 0 fail.
-Hosted migration application and new-flow acceptance remain pending Adam
-running the three whole SQL files in order; SETUP.md documents this.
+Adam applied all three migrations and hosted acceptance passed. Owner
+browser sending, copied evidence/certainty, meeting linking, duplicate
+protection, complete failed-batch rollback, explicit Decide changes, RAID
+status changes, viewer API/direct REST/RPC denial and deleted-meeting
+survival were verified. All scratch tracker rows were archived, preserving
+events; the scratch meeting was deleted and temporary sessions revoked.
+No OpenAI calls occurred. All 89 signed-out checks passed again, and
+post-migration regression 5bc64b1c-3918-44a4-9a4b-fdfef5e6c2fb remained
+10 pass / 22 warn / 0 fail. SETUP.md records hosted acceptance.

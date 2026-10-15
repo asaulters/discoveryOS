@@ -209,7 +209,8 @@ migrations. These migrations add the optional meeting/project link, copied
 source keys and unique indexes, RAID with owner/viewer RLS, RAID audit
 events, and the `send_to_project` security-invoker function. No environment
 variables, Auth settings or service role key are added for this sprint.
-Hosted application of these three migrations is still pending.
+Adam applied all three migrations, and hosted acceptance passed on
+October 15, 2026.
 
 As an owner, open a meeting's Review or Workflow page and find **Send to
 project**. Pick a project (or create one there), tick the source items,
@@ -260,5 +261,25 @@ The existing hosted database-backed regression was rerun on October 15,
 2026 before applying 0037–0039: run
 `fc99d451-aa1a-4b3d-b500-27e53cc098f9` matched the existing baseline,
 **10 pass, 22 warnings, 0 failures**. All **89** signed-out page/API method
-checks passed. Hosted acceptance of the new flows remains pending the
-three migrations above.
+checks passed. Post-migration hosted acceptance also passed; see the record below.
+
+
+Sprint 35 hosted acceptance passed after Adam applied 0037–0039.
+Anonymous REST calls returned no meeting rows and were denied RAID access.
+Viewer direct RAID INSERT and direct send RPC returned RLS/permission code
+42501; viewer write APIs returned 403. A batch with a valid follow-up then
+an invalid gap left no tasks, fallback package, events or meeting link.
+The owner browser sent five selected items in one batch in under five
+minutes: a follow-up, workflow gap, possible mismatch, no-build decision
+and experiment. Quotes, edited title/certainty, recommendation confidence,
+meeting link and globally disabled duplicate selection were verified.
+A repeat API send returned 409. Stage stayed Intake until the explicit
+Decide button was clicked. RAID status changes worked, and viewers saw
+RAID/evidence without send, add or status controls. Deleting the scratch
+meeting preserved copied tasks, work packages and RAID, with quotes and
+Meeting deleted visible. The test project recorded 15 events before
+cleanup; all tracker verification rows were archived and events preserved.
+The scratch meeting was deleted and temporary test sessions revoked locally.
+No OpenAI calls were made. All 89 signed-out checks passed again.
+Post-migration regression run `5bc64b1c-3918-44a4-9a4b-fdfef5e6c2fb`
+remained **10 pass, 22 existing warnings, 0 failures**.
