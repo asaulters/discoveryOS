@@ -5062,6 +5062,17 @@ preferences and viewer read-only controls/direct REST denial.
 
 Existing hosted DiscoveryOS regression was rerun without OpenAI calls:
 3c420717-55e9-490a-a956-300d46279916, 10 pass / 22 warn / 0 fail, matching
-its prior baseline. Tracker migrations have not been applied to hosted
-Supabase; apply whole files 0034, 0035 and 0036 in order before hosted tracker
-acceptance. SETUP.md includes the migration and acceptance steps.
+its prior baseline. Adam then applied 0034–0036 to hosted Supabase, and
+hosted acceptance passed on October 15, 2026. Anonymous reads were denied
+on all four tables. Viewers could read but could not mutate via REST or
+API; owners/viewers could not update or delete events. Owner API/browser
+checks verified project/two-package/two-task creation, all list/board task
+transitions, blocked reason and completion rules, editing, archive visibility
+and My week grouping/filtering. The project recorded 20 events before
+cleanup, including five creations and seven status changes. All verification
+rows were archived and test sessions locally revoked. All 85 signed-out
+route/method checks passed again. SETUP.md includes the acceptance record.
+
+Post-migration DiscoveryOS regression run
+`fc9c7863-f5fe-4112-8ba8-1f32e3dd8d0b` also completed unchanged:
+10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.

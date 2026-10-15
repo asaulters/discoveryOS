@@ -120,7 +120,8 @@ settings unchanged. In Supabase SQL Editor run each **entire file** in order:
 3. `supabase/migrations/0036_project_events.sql`
 
 Do not rerun 0033 on a database where it has already succeeded. These three
-migrations are new and have not yet been applied to the hosted project.
+migrations were applied by Adam and verified on the hosted project on
+October 15, 2026.
 Apply all three before opening the tracker; 0036 installs the atomic audit
 triggers. Every new table enables RLS in its own migration and revokes all
 anonymous privileges. No new environment variables or service role key are
@@ -178,4 +179,18 @@ My week date/project grouping, completed-this-week board, project chips,
 per-user preferences, keyboard menus and viewer API/direct REST denials.
 The existing hosted DiscoveryOS regression remained unchanged: run
 `3c420717-55e9-490a-a956-300d46279916`, 10 pass, 22 warnings, 0 failures.
-Hosted tracker acceptance remains pending until 0034–0036 are applied.
+Hosted tracker acceptance passed October 15, 2026 after Adam applied all
+three migrations. All four tables denied anonymous REST reads. Viewer
+INSERTs failed with RLS code 42501, UPDATE/DELETE affected no rows, and write
+APIs returned 403. Both owner and viewer were denied event UPDATE/DELETE.
+Owner APIs and the actual browser verified project creation, two work
+packages, two tasks, list/board status transitions, missing blocked-reason
+rejection, completion timestamps, editing, archive visibility and My week
+by-day/by-project/board views. The verification project recorded 20 events
+before cleanup (five creations and seven task status changes among them).
+All verification rows were archived, preserving history; only the temporary
+test sessions were revoked. All 85 signed-out route checks passed again.
+
+Post-migration DiscoveryOS regression run
+`fc9c7863-f5fe-4112-8ba8-1f32e3dd8d0b` also completed unchanged:
+10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.
