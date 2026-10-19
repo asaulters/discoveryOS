@@ -4,7 +4,12 @@ import Raid from "@/app/tracker/Raid";
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { OwnerOnly, WriteButton, WriteInput } from "@/app/RoleControls";
+import {
+  OwnerOnly,
+  WriteButton,
+  WriteInput,
+  WriteTextarea,
+} from "@/app/RoleControls";
 import {
   label,
   TASK_STATUSES,
@@ -30,6 +35,10 @@ import {
 } from "@/app/tracker/shared";
 function activityDescription(event: ProjectEvent) {
   const after = (event.to_value ?? {}) as Record<string, unknown>;
+  if (event.action.startsWith("subtask_"))
+    return String(
+      (after.subtask as { title?: string } | undefined)?.title ?? "Subtask",
+    );
   if (event.action === "created")
     return String(after.name ?? after.title ?? "Created");
   const before = (event.from_value ?? {}) as Record<string, unknown>;
@@ -58,6 +67,7 @@ const packageFields: FormField[] = [
     label: "Acceptance criteria",
     type: "textarea",
   },
+  { name: "notes", label: "Notes (optional)", type: "textarea" },
 ];
 export default function ProjectClient({
   initial,
@@ -73,7 +83,7 @@ export default function ProjectClient({
   const [editing, setEditing] = useState(false),
     [adding, setAdding] = useState(false),
     [editingPackage, setEditingPackage] = useState<string | null>(null);
-  const { actions, pane } = useTaskActions(tracker);
+  const { actions, pane } = useTaskActions(tracker, true, showArchived);
   const project = tracker.data.projects[0];
   const packages = tracker.data.workPackages.filter(
     (w) => showArchived || !w.archived_at,
@@ -95,6 +105,7 @@ export default function ProjectClient({
       await tracker.mutate("/api/tasks", "POST", {
         work_package_id: w.id,
         title: data.get("title"),
+        notes: data.get("notes") || null,
         due_date: data.get("due_date") || null,
         sort_order: order,
       })
@@ -303,6 +314,14 @@ export default function ProjectClient({
                   </OwnerOnly>
                 </div>
                 <Evidence item={w} />
+                {w.notes && (
+                  <div className="mb-4 text-sm">
+                    <p className="text-xs font-medium text-neutral-500">
+                      Notes
+                    </p>
+                    <p className="whitespace-pre-wrap">{w.notes}</p>
+                  </div>
+                )}
                 {w.acceptance_criteria && (
                   <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
                     {w.acceptance_criteria}
@@ -386,6 +405,16 @@ export default function ProjectClient({
                           <WriteInput
                             name="due_date"
                             type="date"
+                            className={`${inputClass} mt-1`}
+                          />
+                        </label>
+                        <label className="w-full text-xs text-neutral-500">
+                          Notes (optional)
+                          <WriteTextarea
+                            aria-label={`Task notes in ${w.name}`}
+                            name="notes"
+                            rows={2}
+                            maxLength={20000}
                             className={`${inputClass} mt-1`}
                           />
                         </label>

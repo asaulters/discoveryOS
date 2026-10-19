@@ -1,7 +1,7 @@
 # Public hosting setup (Sprint 33)
 
 1. Apply every SQL migration in `supabase/migrations/` in filename order,
-   through `0039_send_to_project.sql`, before exposing the app publicly.
+   through `0040_tracker_notes_subtasks.sql`, before exposing the app publicly.
 2. In Supabase Dashboard → Authentication → Users, create Adam's owner user
    and a viewer user with email/password. Confirm their email addresses in
    the dashboard. Copy their user UUIDs and run this in the SQL editor:
@@ -283,3 +283,37 @@ The scratch meeting was deleted and temporary test sessions revoked locally.
 No OpenAI calls were made. All 89 signed-out checks passed again.
 Post-migration regression run `5bc64b1c-3918-44a4-9a4b-fdfef5e6c2fb`
 remained **10 pass, 22 existing warnings, 0 failures**.
+
+# Faster task entry: notes and subtasks
+
+Before deploying this change on Render, run the whole
+`supabase/migrations/0040_tracker_notes_subtasks.sql` file in Supabase's SQL
+Editor, after 0039. It adds optional work-package notes and task checklist
+items with owner/viewer RLS and atomic activity events. Existing task notes
+and meeting/project data are retained. No environment variables change.
+Hosted application of 0040 is pending; deploy after applying it.
+
+Work-package create/edit forms now include optional Notes, displayed on the
+package. Project quick-add and My week task creation include optional Notes,
+so task details need not be opened afterward to add context.
+
+In project List or Board, use **+ Subtask** beneath a task. Enter a title,
+optionally add notes, then use **Add subtask** or Enter in the title field.
+The form stays open and returns focus for repeated entry. The task details
+pane also shows the checklist, including when opened from My week.
+Checklist completion is independent of the parent task's status and task
+progress counts. Subtasks have no separate due date or My week card.
+
+Checklist items support complete/reopen and archive/restore. Project
+**Show archived** includes archived checklist items. Archived tasks, packages
+and projects disable checklist writes in the app/API. Viewers can read notes
+and subtasks, but cannot add, complete or archive them; database RLS guards
+direct writes too. Checklist changes appear against their parent task in
+Recent activity. A failed activity insert rolls back the checklist change.
+
+Validation passed locally: typecheck, lint, production build, 71 existing
+self-tests, tracker model/request-origin checks, 36-table isolated SQL/RLS,
+the full tracker/discovery browser suite and 91 signed-out route checks.
+New browser acceptance includes repeated keyboard entry and focus, optional
+notes persistence, rejected-save rollback, checklist archive/restore and
+viewer API/direct REST denial. Hosted acceptance follows application of 0040.

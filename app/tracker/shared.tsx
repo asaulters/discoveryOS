@@ -1,5 +1,6 @@
 "use client";
 import Evidence from "./Evidence";
+import Subtasks from "./Subtasks";
 
 import {
   useEffect,
@@ -271,10 +272,12 @@ export interface TaskActions {
   open: (task: Task, status?: TaskStatus) => void;
   change: (task: Task, status: TaskStatus) => void;
   busy: boolean;
+  renderSubtasks?: (task: Task, disabled: boolean) => ReactNode;
 }
 export function TaskRow({
   task,
   context,
+  renderSubtasks,
   open,
   change,
   busy,
@@ -300,6 +303,7 @@ export function TaskRow({
         {task.due_date ?? "No date"}
       </span>
       <TaskStatusMenu task={task} busy={busy} change={change} />
+      {renderSubtasks?.(task, busy || !!task.archived_at)}
       <div className="w-full">
         <Evidence item={task} />
       </div>
@@ -313,6 +317,7 @@ export function TaskRow({
 }
 export function TaskBoard({
   rows,
+  renderSubtasks,
   open,
   change,
   busy,
@@ -367,6 +372,13 @@ export function TaskBoard({
                     }
                     change={change}
                   />
+                  {renderSubtasks?.(
+                    row.task,
+                    busy ||
+                      !!row.task.archived_at ||
+                      !!row.project.archived_at ||
+                      !!row.workPackage.archived_at,
+                  )}
                   {status === "blocked" && (
                     <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
                       Blocked: {row.task.blocked_reason}
@@ -388,6 +400,7 @@ export function TaskPane({
   busy,
   error,
   canEdit = true,
+  children,
 }: {
   task: Task;
   initialStatus?: TaskStatus;
@@ -396,6 +409,7 @@ export function TaskPane({
   busy: boolean;
   error: string | null;
   canEdit?: boolean;
+  children?: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -471,10 +485,15 @@ export function TaskPane({
         </p>
       )}
       <Evidence item={task} />
+      {children}
     </dialog>
   );
 }
-export function useTaskActions(tracker: ReturnType<typeof useTracker>) {
+export function useTaskActions(
+  tracker: ReturnType<typeof useTracker>,
+  inlineSubtasks = false,
+  showArchived = false,
+) {
   const [selected, setSelected] = useState<{
     id: string;
     status?: TaskStatus;
@@ -493,8 +512,22 @@ export function useTaskActions(tracker: ReturnType<typeof useTracker>) {
   const project = tracker.data.projects.find(
     (p) => p.id === workPackage?.project_id,
   );
+  const renderSubtasks = (parent: Task, disabled: boolean) => (
+    <Subtasks
+      task={parent}
+      rows={tracker.data.subtasks.filter((s) => s.task_id === parent.id)}
+      disabled={disabled || tracker.busy}
+      showArchived={showArchived}
+      mutate={tracker.mutate}
+    />
+  );
   return {
-    actions: { open, change, busy: tracker.busy },
+    actions: {
+      open,
+      change,
+      busy: tracker.busy,
+      ...(inlineSubtasks ? { renderSubtasks } : {}),
+    },
     pane: task && (
       <TaskPane
         task={task}
@@ -506,7 +539,14 @@ export function useTaskActions(tracker: ReturnType<typeof useTracker>) {
         busy={tracker.busy}
         error={tracker.error}
         canEdit={!workPackage?.archived_at && !project?.archived_at}
-      />
+      >
+        {renderSubtasks(
+          task,
+          !!task.archived_at ||
+            !!workPackage?.archived_at ||
+            !!project?.archived_at,
+        )}
+      </TaskPane>
     ),
   };
 }

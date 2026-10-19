@@ -44,6 +44,7 @@ export interface WorkPackage extends TrackerTimestamps, Provenance {
   sort_order: number;
   target_date: string | null;
   acceptance_criteria: string | null;
+  notes: string | null;
 }
 export interface Task extends TrackerTimestamps, Provenance {
   id: string;
@@ -56,6 +57,13 @@ export interface Task extends TrackerTimestamps, Provenance {
   notes: string | null;
   sort_order: number;
   completed_at: string | null;
+}
+export interface Subtask extends TrackerTimestamps {
+  id: string;
+  task_id: string;
+  title: string;
+  notes: string | null;
+  is_done: boolean;
 }
 export interface ProjectEvent extends Record<string, unknown> {
   id: string;
@@ -87,6 +95,7 @@ export interface TrackerData {
   tasks: Task[];
   events: ProjectEvent[];
   raidItems: RaidItem[];
+  subtasks: Subtask[];
   meetings: { id: string; name: string; project_id: string | null }[];
 }
 export interface WeekTask {

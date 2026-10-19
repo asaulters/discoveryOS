@@ -4,6 +4,7 @@ import type {
   Task,
   ProjectEvent,
   RaidItem,
+  Subtask,
 } from "@/lib/tracker/types";
 import type { IssueCategory } from "@/lib/pilotIssueCategories";
 
@@ -763,6 +764,12 @@ export type RemoteCaptureReadiness = {
 export type Database = {
   public: {
     Tables: {
+      task_subtasks: {
+        Row: Subtask;
+        Insert: Partial<Subtask> & Pick<Subtask, "task_id" | "title">;
+        Update: Partial<Subtask>;
+        Relationships: [];
+      };
       raid_items: {
         Row: RaidItem;
         Insert: Partial<RaidItem> &

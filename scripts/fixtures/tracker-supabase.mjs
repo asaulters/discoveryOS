@@ -117,7 +117,7 @@ let queue = Promise.resolve();
     if (url.pathname === "/__reset") {
       queue = queue.then(async () => {
         await db.exec(
-          "truncate project_events,tasks,work_packages,raid_items,projects,meetings cascade",
+          "truncate task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
         );
         send(res, 200, { ok: true });
       });

@@ -1,3 +1,4 @@
+import { checkSubtasks } from "./check-subtasks-rls.mjs";
 import { checkMeetingProject } from "./check-meeting-project-rls.mjs";
 // Isolated PostgreSQL/RLS verification. Never connects to the hosted project.
 import assert from "node:assert/strict";
@@ -79,6 +80,7 @@ try {
           "tasks",
           "project_events",
           "raid_items",
+          "task_subtasks",
         ].includes(table)
       ) {
         for (const privilege of [
@@ -346,6 +348,7 @@ try {
     );
   });
   await checkMeetingProject(db, asRole, owner, viewer);
+  await checkSubtasks(db, asRole, owner, viewer);
   // Event failure rolls the originating mutation back; there is no partial save.
   await db.exec("revoke insert on project_events from authenticated");
   await asRole("authenticated", owner, async () => {

@@ -50,6 +50,7 @@ function Form({ tracker }: { tracker: ReturnType<typeof useTracker> }) {
         await tracker.mutate("/api/tasks", "POST", {
           work_package_id: id,
           title: form.get("title"),
+          notes: form.get("notes") || null,
           due_date: form.get("due_date") || null,
         })
       )
@@ -115,6 +116,15 @@ function Form({ tracker }: { tracker: ReturnType<typeof useTracker> }) {
           <label className="block text-sm">
             Due date (optional)
             <input className={inputClass} type="date" name="due_date" />
+          </label>
+          <label className="block text-sm">
+            Notes (optional)
+            <textarea
+              className={inputClass}
+              name="notes"
+              rows={3}
+              maxLength={20000}
+            />
           </label>
           {error && <p role="alert">{error}</p>}
           <button

@@ -29,7 +29,7 @@ async function ready(url, child) {
   throw new Error(`Test server did not become ready: ${url}`);
 }
 async function run(file) {
-  const child = start([file]);
+  const child = start([file], { AUTH_TEST_ORIGIN: "http://127.0.0.1:3035" });
   await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       child.kill("SIGTERM");
@@ -64,11 +64,14 @@ try {
     },
   );
   await ready("http://127.0.0.1:3035/login", app);
-  if (!process.env.TRACKER_SEND_ONLY) {
+  if (!process.env.TRACKER_NOTES_ONLY && !process.env.TRACKER_SEND_ONLY) {
     await run("scripts/fixtures/tracker-browser.mjs");
     await run("scripts/fixtures/tracker-week-browser.mjs");
   }
-  await run("scripts/fixtures/discovery-send-browser.mjs");
+  if (!process.env.TRACKER_NOTES_ONLY)
+    await run("scripts/fixtures/discovery-send-browser.mjs");
+  await run("scripts/fixtures/tracker-notes-browser.mjs");
+  await run("scripts/check-signed-out.mjs");
   console.log("PASS: isolated tracker browser/API/RLS acceptance suite.");
 } finally {
   await Promise.all(

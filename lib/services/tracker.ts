@@ -7,6 +7,7 @@ import type {
   WorkPackage,
   Task,
   RaidItem,
+  Subtask,
 } from "@/lib/tracker/types";
 import {
   projectCreate,
@@ -18,6 +19,8 @@ import {
   entityId,
   raidCreate,
   raidPatch,
+  subtaskCreate,
+  subtaskPatch,
 } from "@/lib/tracker/validation";
 
 export class TrackerError extends Error {
@@ -77,6 +80,7 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
       tasks: [],
       events: [],
       raidItems: [],
+      subtasks: [],
       meetings: [],
     };
   const packages = await allRows<WorkPackage>(
@@ -125,7 +129,24 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
       .order("created_at")
       .order("id"),
   );
+  const subtasks: Subtask[] = [];
+  for (let offset = 0; offset < tasks.length; offset += 100) {
+    subtasks.push(
+      ...(await allRows<Subtask>(
+        db
+          .from("task_subtasks")
+          .select("*")
+          .in(
+            "task_id",
+            tasks.slice(offset, offset + 100).map((t) => t.id),
+          )
+          .order("created_at")
+          .order("id"),
+      )),
+    );
+  }
   return {
+    subtasks,
     projects,
     workPackages: packages,
     tasks,
@@ -135,7 +156,7 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
   };
 }
 export async function mutateTracker(
-  kind: "project" | "package" | "task" | "raid",
+  kind: "project" | "package" | "task" | "raid" | "subtask",
   body: unknown,
   id?: string,
 ) {
@@ -144,6 +165,74 @@ export async function mutateTracker(
   if (auth.role !== "owner") throw new TrackerError("Owner role required", 403);
   if (id) entityId.parse(id);
   const db = await createServerSupabaseClient();
+  if (kind === "subtask") {
+    const input = id ? subtaskPatch.parse(body) : subtaskCreate.parse(body);
+    const existing = id
+      ? await db
+          .from("task_subtasks")
+          .select("task_id")
+          .eq("id", id)
+          .maybeSingle()
+      : null;
+    if (existing) check(existing.error);
+    if (id && !existing?.data) throw new TrackerError("Subtask not found", 404);
+    const taskId = existing?.data?.task_id ?? subtaskCreate.parse(body).task_id;
+    const task = await db
+      .from("tasks")
+      .select("work_package_id,archived_at")
+      .eq("id", taskId)
+      .maybeSingle();
+    check(task.error);
+    if (!task.data) throw new TrackerError("Task not found", 404);
+    const workPackage = await db
+      .from("work_packages")
+      .select("project_id,archived_at")
+      .eq("id", task.data.work_package_id)
+      .maybeSingle();
+    check(workPackage.error);
+    const project = workPackage.data
+      ? await db
+          .from("projects")
+          .select("archived_at")
+          .eq("id", workPackage.data.project_id)
+          .maybeSingle()
+      : null;
+    if (project) check(project.error);
+    if (
+      task.data.archived_at ||
+      !workPackage.data ||
+      workPackage.data.archived_at ||
+      !project?.data ||
+      project.data.archived_at
+    )
+      throw new TrackerError(
+        "Restore the task, work package and project before changing subtasks",
+        409,
+      );
+    if (!id) {
+      const r = await db
+        .from("task_subtasks")
+        .insert(subtaskCreate.parse(input))
+        .select()
+        .single();
+      check(r.error);
+      return r.data;
+    }
+    const { archived, ...fields } = subtaskPatch.parse(input);
+    const r = await db
+      .from("task_subtasks")
+      .update({
+        ...fields,
+        ...(archived === undefined
+          ? {}
+          : { archived_at: archived ? new Date().toISOString() : null }),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    check(r.error);
+    return r.data;
+  }
   if (kind === "raid") {
     const existing = id
       ? await db

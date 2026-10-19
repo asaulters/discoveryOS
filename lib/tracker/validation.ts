@@ -26,6 +26,7 @@ const packageFields = {
   sort_order: order,
   target_date: date,
   acceptance_criteria: text,
+  notes: text,
 };
 const taskFields = {
   title: name,
@@ -108,4 +109,17 @@ export const sendBatch = z
       .min(1)
       .max(100),
   })
+  .strict();
+
+export const subtaskCreate = z
+  .object({ task_id: z.uuid(), title: name, notes: text.optional() })
+  .strict();
+export const subtaskPatch = z
+  .object({
+    title: name,
+    notes: text,
+    is_done: z.boolean(),
+    archived: z.boolean(),
+  })
+  .partial()
   .strict();

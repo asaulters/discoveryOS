@@ -5111,3 +5111,29 @@ events; the scratch meeting was deleted and temporary sessions revoked.
 No OpenAI calls occurred. All 89 signed-out checks passed again, and
 post-migration regression 5bc64b1c-3918-44a4-9a4b-fdfef5e6c2fb remained
 10 pass / 22 warn / 0 fail. SETUP.md records hosted acceptance.
+
+## Tracker notes and subtask checklists
+
+Added optional notes during project quick-add and My week task creation,
+plus optional notes in work-package create/edit forms and package display.
+Added inline subtask checklists to project List and Board and the task
+pane. Owners can add titles/optional notes repeatedly with Enter, complete,
+reopen and archive/restore items; viewers can read but cannot write.
+Checkboxes respond immediately and revert on rejected saves. Parent task
+status and task progress remain independent of checklist completion.
+
+Migration 0040 adds work_packages.notes and task_subtasks with existing
+owner/viewer RLS, archive-only deletion and atomic project activity events.
+The API checks task/package/project archive state, and checklist fetching
+is paginated with bounded parent-id batches. No AI calls or new secrets.
+Apply 0040 to Supabase before deploying these changes to Render; hosted
+migration application and acceptance remain pending.
+
+Validation passed: typecheck, lint, production build, 71 existing self-tests,
+tracker model/request-origin checks, the 36-table migration/RLS suite,
+full existing tracker/discovery browser flows and new checklist acceptance.
+Browser checks cover notes persistence, repeated keyboard entry/focus,
+list/board/pane completion, rejected-save rollback, reload, archive/restore,
+archived-parent rejection, viewer read-only controls/API/direct REST denial.
+All 91 signed-out route/method checks passed. SETUP.md includes the single
+whole-file migration step required before deployment.
