@@ -5221,7 +5221,7 @@ task pane, and new checklist items append after reordered siblings.
 0043_tracker_reordering.sql preserves existing checklist order and adds its
 order column, append trigger and the owner-checked reorder RPC. It must be
 applied in Supabase before this code is pushed/deployed. SETUP.md has the
-whole-file migration step. Hosted migration/deployment acceptance is pending.
+whole-file migration step. Adam applied 0043 and hosted acceptance passed.
 
 Validation passed: typecheck, lint, production build, CSV compatibility tests,
 all migrations/RLS tests, full existing tracker/discovery/resources browser
@@ -5231,3 +5231,10 @@ board-scoped moves, reload persistence, append order, rejected-save feedback,
 atomic event rollback and viewer/anonymous denial. Existing regression
 3edc64fd-cd24-42d7-aa28-af4dc1068c9c remained 10 pass / 22 warn / 0 fail,
 with no OpenAI calls. No new packages or environment variables are required.
+
+Hosted Supabase/Render acceptance verified saved work-package, task and subtask
+moves, reload persistence, boundary controls, board-column moves without status
+changes, and new-subtask append order. Viewer reorder controls were absent and
+API/RPC/direct REST writes were denied. Verification records were archived and
+temporary sessions locally revoked. Deployment code commit: e12e3b6.
+All 98 signed-out route/method checks also passed against live Render.
