@@ -1,0 +1,6 @@
+type,key,parent_key,name,notes,status,due_date,target_date,blocked_reason,size,sort_order,acceptance_criteria,requesting_team,sponsor,goal,stage,health,definition_of_done,is_done
+project,p1,,Example project,Build notes and project context,,,,,,,,Operations,,Improve the approval process,discovery,on_track,,
+work_package,wp1,p1,Validate the workflow,Interview process owners,todo,,,,,,Current process confirmed,,,,,,,
+task,t1,wp1,Map approval steps,Include exceptions and backup owners,todo,,,,s,,,,,,,,,
+subtask,s1,t1,Confirm backup owner,Ask the team lead,,,,,,,,,,,,,,false
+subtask,s2,t1,Document escalation,,,,,,,,,,,,,,,false

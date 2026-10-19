@@ -1,6 +1,7 @@
 "use client";
 import Evidence from "@/app/tracker/Evidence";
 import Raid from "@/app/tracker/Raid";
+import ProjectResources from "./ProjectResources";
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -35,6 +36,10 @@ import {
 } from "@/app/tracker/shared";
 function activityDescription(event: ProjectEvent) {
   const after = (event.to_value ?? {}) as Record<string, unknown>;
+  if (event.action.startsWith("resource_") || event.action === "file_uploaded")
+    return String(
+      (after.resource as { name?: string } | undefined)?.name ?? "Resource",
+    );
   if (event.action.startsWith("subtask_"))
     return String(
       (after.subtask as { title?: string } | undefined)?.title ?? "Subtask",
@@ -196,6 +201,11 @@ export default function ProjectClient({
           </section>
         )}
       </header>
+      <ProjectResources
+        project={project}
+        tracker={tracker}
+        showArchived={showArchived}
+      />
       {tracker.error && (
         <p role="alert" className="mb-4 text-sm text-red-700">
           {tracker.error}

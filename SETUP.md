@@ -1,7 +1,7 @@
 # Public hosting setup (Sprint 33)
 
 1. Apply every SQL migration in `supabase/migrations/` in filename order,
-   through `0040_tracker_notes_subtasks.sql`, before exposing the app publicly.
+   through `0042_project_csv_import.sql`, before exposing the app publicly.
 2. In Supabase Dashboard → Authentication → Users, create Adam's owner user
    and a viewer user with email/password. Confirm their email addresses in
    the dashboard. Copy their user UUIDs and run this in the SQL editor:
@@ -329,3 +329,60 @@ project activity. All verification rows were archived and temporary test
 sessions revoked locally. All 91 signed-out checks passed again. Existing
 regression run `fd134a6c-f494-4191-acb9-1d9291226d34` remained
 10 pass, 22 existing warnings, 0 failures. No OpenAI calls were made.
+
+# Project notes, resources and CSV import
+
+Before deploying this update to Render, run each whole SQL file in Supabase
+Dashboard → SQL Editor, in order after 0040:
+
+1. `supabase/migrations/0041_project_resources.sql`
+2. `supabase/migrations/0042_project_csv_import.sql`
+
+0041 adds project notes, resource metadata and the private `project-files`
+Storage bucket with role-based policies. The migration creates the bucket;
+do not create a public bucket manually. Owners can upload only to paths
+reserved by a pending attachment on an active project. Files cannot be
+overwritten. Owners and viewers can read completed active files; incomplete
+uploads are owner-only. Anonymous object access is denied. The runtime uses
+only the session Supabase client, never a service role key. No host environment
+variables change.
+
+On each project, **Edit notes**, **Attach file** and **Add link** keep build
+notes, slide decks and reference documents together. Files upload directly
+to Supabase rather than Render's filesystem. Maximum file size is 25 MiB;
+use an HTTPS document link for larger files or hosted slide decks. Downloads
+use signed URLs valid for 60 seconds and request attachment disposition.
+Treat a signed URL as a short-lived download credential. Owners may archive
+and restore resources; archiving retains the file but prevents new downloads
+until restored. Already-issued download URLs expire within one minute.
+A **Finish upload** control can complete a reserved upload whose file arrived
+but finalization was interrupted; otherwise archive the incomplete entry.
+Project archives prevent resource writes; existing resources remain readable.
+Files are stored/downloaded, not parsed or executed by DiscoveryOS.
+
+0042 adds an owner-only security-invoker import RPC. **Projects → Import
+project CSV** downloads a template, validates and previews a hierarchy and
+creates one new project with its work packages, tasks and subtasks in a
+single transaction. Invalid rows roll back the whole import and events.
+Request IDs prevent duplicate projects when retrying a lost response.
+Existing projects are not updated. Viewers can read imported work but
+cannot import, edit notes, upload or archive resources.
+
+The [CSV format guide](docs/project-csv-import.md) lists all columns and
+examples; [the example CSV](docs/project-import-template.csv) matches the
+in-app template. Limits are 2 MiB and 2,000 data rows per import. Attachments
+are added separately after import. No AI calls are added.
+
+Use `npm run test:project-import` for parser/schema/template checks.
+`npm run test:auth-rls` now applies 0001–0042 to isolated PostgreSQL, emulates
+the Supabase-owned Storage schema, and tests private object policies,
+resource roles, atomic import/rollback and retries. The browser suite uses
+an isolated Storage protocol fixture backed by these real RLS policies,
+including actual uploaded/downloaded bytes. All fixture data stays local.
+Hosted migration application and new-feature acceptance are pending.
+
+Local validation passed: production build, typecheck, lint, all 71 existing
+self-tests, tracker model/request-origin tests, CSV parser/template checks,
+37-table isolated PostgreSQL/RLS tests and the full tracker/discovery/browser
+suite including resources/import. All 97 signed-out route/method checks
+passed. Hosted verification follows the two migrations above.

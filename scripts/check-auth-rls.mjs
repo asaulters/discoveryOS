@@ -1,3 +1,5 @@
+import { checkProjectResources } from "./check-project-resources-rls.mjs";
+import { storageSchema } from "./fixtures/storage-schema.mjs";
 import { checkSubtasks } from "./check-subtasks-rls.mjs";
 import { checkMeetingProject } from "./check-meeting-project-rls.mjs";
 // Isolated PostgreSQL/RLS verification. Never connects to the hosted project.
@@ -21,6 +23,7 @@ try {
     $$;
     grant usage on schema public, auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;`);
+  await storageSchema(db);
   const tables = [];
   for (const file of readdirSync("supabase/migrations")
     .filter((f) => /^00\d\d_.*\.sql$/.test(f))
@@ -81,6 +84,7 @@ try {
           "project_events",
           "raid_items",
           "task_subtasks",
+          "project_attachments",
         ].includes(table)
       ) {
         for (const privilege of [
@@ -349,6 +353,7 @@ try {
   });
   await checkMeetingProject(db, asRole, owner, viewer);
   await checkSubtasks(db, asRole, owner, viewer);
+  await checkProjectResources(db, asRole, owner, viewer);
   // Event failure rolls the originating mutation back; there is no partial save.
   await db.exec("revoke insert on project_events from authenticated");
   await asRole("authenticated", owner, async () => {

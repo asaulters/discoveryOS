@@ -1,3 +1,5 @@
+import { storageProtocol } from "./storage-protocol.mjs";
+import { storageSchema } from "./storage-schema.mjs";
 import { seedDiscovery } from "./discovery-seed.mjs";
 // Isolated Supabase protocol fixture. Never connects to a hosted project.
 import fs from "node:fs";
@@ -74,7 +76,7 @@ function send(res, status, body) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
-      "authorization,apikey,content-type,x-client-info,prefer,range,range-unit,x-supabase-api-version",
+      "authorization,apikey,content-type,x-client-info,prefer,range,range-unit,x-supabase-api-version,x-upsert,cache-control",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     "Access-Control-Expose-Headers": "content-range",
   });
@@ -85,6 +87,7 @@ let queue = Promise.resolve();
   await db.exec(
     `create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid;$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;alter default privileges in schema public grant all on tables to anon,authenticated;`,
   );
+  await storageSchema(db);
   for (const file of fs
     .readdirSync("supabase/migrations")
     .filter((f) => f.endsWith(".sql"))
@@ -99,8 +102,10 @@ let queue = Promise.resolve();
   );
   const server = http.createServer(async (req, res) => {
     if (req.method === "OPTIONS") return send(res, 200, {});
-    let raw = "";
-    for await (const chunk of req) raw += chunk;
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const bytes = Buffer.concat(chunks),
+      raw = bytes.toString();
     const url = new URL(req.url, "http://127.0.0.1:54339");
     if (url.pathname === "/auth/v1/token") {
       const body = JSON.parse(raw || "{}");
@@ -117,7 +122,7 @@ let queue = Promise.resolve();
     if (url.pathname === "/__reset") {
       queue = queue.then(async () => {
         await db.exec(
-          "truncate task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
+          "truncate storage.objects,project_attachments,task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
         );
         send(res, 200, { ok: true });
       });
@@ -191,12 +196,25 @@ let queue = Promise.resolve();
           await db.query("select set_config('request.jwt.claim.sub',$1,true)", [
             id || "",
           ]);
+          if (await storageProtocol({ db, req, res, url, bytes, send })) {
+            await db.exec("commit");
+            return;
+          }
           if (url.pathname === "/rest/v1/rpc/current_user_role") {
             const r = await db.query(
               "select public.current_user_role() as role",
             );
             await db.exec("commit");
             return send(res, 200, r.rows[0].role);
+          }
+          if (url.pathname === "/rest/v1/rpc/import_project_csv") {
+            const body = JSON.parse(raw),
+              r = await db.query(
+                "select public.import_project_csv($1,$2::jsonb) as result",
+                [body.p_request_id, JSON.stringify(body.p_rows)],
+              );
+            await db.exec("commit");
+            return send(res, 200, r.rows[0].result);
           }
           const table = url.pathname.replace("/rest/v1/", "");
           if (url.pathname === "/rest/v1/rpc/send_to_project") {

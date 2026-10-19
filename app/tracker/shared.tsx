@@ -38,6 +38,16 @@ export function useTracker(initial: TrackerData, projectId?: string) {
   const [data, setData] = useState(initial),
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false);
+  async function refresh() {
+    const fresh = await fetch(
+      projectId ? `/api/projects/${projectId}` : "/api/projects",
+      { cache: "no-store" },
+    );
+    const snapshot = await fresh.json();
+    if (!fresh.ok)
+      throw new Error(snapshot.error ?? "Unable to refresh tracker");
+    setData(snapshot);
+  }
   async function mutate(path: string, method: "POST" | "PATCH", body: object) {
     setBusy(true);
     setError(null);
@@ -50,14 +60,7 @@ export function useTracker(initial: TrackerData, projectId?: string) {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error ?? "Unable to save change");
-      const fresh = await fetch(
-        projectId ? `/api/projects/${projectId}` : "/api/projects",
-        { cache: "no-store" },
-      );
-      const snapshot = await fresh.json();
-      if (!fresh.ok)
-        throw new Error(snapshot.error ?? "Unable to refresh tracker");
-      setData(snapshot);
+      await refresh();
       return true;
     } catch (error) {
       setError(
@@ -68,7 +71,7 @@ export function useTracker(initial: TrackerData, projectId?: string) {
       setBusy(false);
     }
   }
-  return { data, error, busy, mutate };
+  return { data, error, busy, mutate, refresh };
 }
 const emptySubscribe = () => () => {};
 export function useViewPreference(userId: string, page: string) {

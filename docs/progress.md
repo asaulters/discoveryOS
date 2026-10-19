@@ -5145,3 +5145,38 @@ checklist reads were denied and activity events verified. Test rows were
 archived; temporary sessions locally revoked. All 91 signed-out checks
 passed and regression fd134a6c-f494-4191-acb9-1d9291226d34 remained
 10 pass / 22 warn / 0 fail, without OpenAI calls.
+
+## Project resources and complete-project CSV import
+
+Added project notes and a Files and links section. Owners can upload files,
+add HTTPS document links and archive/restore resources. Files go directly
+to private Supabase Storage with session credentials and reserved paths;
+viewers can read completed resources and download files but cannot write.
+Incomplete uploads stay owner-only and can be finalized after interruption.
+Downloads request attachment disposition and use 60-second signed URLs.
+
+0041 adds projects.notes, project_attachments, the private project-files
+bucket, role policies and atomic resource activity events. 0042 adds an
+owner-checked security-invoker import RPC with request-ID retry protection.
+The Projects CSV importer validates and previews one project with its work
+packages, tasks and subtasks, then saves the hierarchy and events atomically.
+Failures roll back every imported row; existing projects are not modified.
+No service role key or AI calls are used by the new features.
+
+The in-app CSV template matches docs/project-import-template.csv; the
+complete column/schema guide is docs/project-csv-import.md. Quoted commas,
+quotes and multiline notes, BOM/CRLF, arbitrary row order, parent references,
+duplicate keys, dates/statuses and import limits are covered by tests.
+
+Validation passed: production build, typecheck, lint, all 71 existing
+self-tests, tracker model/request-origin tests, parser/template tests,
+37-table PostgreSQL/RLS tests including Storage policies and import rollback,
+and the full existing plus new browser acceptance suite. Browser tests
+verify complete project hierarchy creation/retry, project notes and links,
+actual private file upload/download bytes, incomplete-file handling,
+archive/restore and viewer read/download-only access. All 97 signed-out
+page/API method checks passed. No dependency packages were added.
+
+Hosted application and acceptance remain pending 0041 then 0042 in
+Supabase SQL Editor. SETUP.md documents the whole-file migration steps.
+Commit locally first; publish to Render after the schema is ready.

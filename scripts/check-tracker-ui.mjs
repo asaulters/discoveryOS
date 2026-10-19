@@ -64,13 +64,19 @@ try {
     },
   );
   await ready("http://127.0.0.1:3035/login", app);
-  if (!process.env.TRACKER_NOTES_ONLY && !process.env.TRACKER_SEND_ONLY) {
+  if (
+    !process.env.TRACKER_RESOURCES_ONLY &&
+    !process.env.TRACKER_NOTES_ONLY &&
+    !process.env.TRACKER_SEND_ONLY
+  ) {
     await run("scripts/fixtures/tracker-browser.mjs");
     await run("scripts/fixtures/tracker-week-browser.mjs");
   }
-  if (!process.env.TRACKER_NOTES_ONLY)
+  if (!process.env.TRACKER_RESOURCES_ONLY && !process.env.TRACKER_NOTES_ONLY)
     await run("scripts/fixtures/discovery-send-browser.mjs");
-  await run("scripts/fixtures/tracker-notes-browser.mjs");
+  if (!process.env.TRACKER_RESOURCES_ONLY)
+    await run("scripts/fixtures/tracker-notes-browser.mjs");
+  await run("scripts/fixtures/project-resources-browser.mjs");
   await run("scripts/check-signed-out.mjs");
   console.log("PASS: isolated tracker browser/API/RLS acceptance suite.");
 } finally {

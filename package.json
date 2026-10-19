@@ -12,7 +12,8 @@
     "test:signed-out": "node scripts/check-signed-out.mjs",
     "test:request-origin": "node scripts/check-request-origin.mjs",
     "test:tracker-model": "node scripts/check-tracker-model.mjs",
-    "test:tracker-ui": "node scripts/check-tracker-ui.mjs"
+    "test:tracker-ui": "node scripts/check-tracker-ui.mjs",
+    "test:project-import": "node scripts/check-project-import.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

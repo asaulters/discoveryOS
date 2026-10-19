@@ -19,6 +19,7 @@ const projectFields = {
   health: z.enum(PROJECT_HEALTH),
   target_date: date,
   definition_of_done: text,
+  notes: text,
 };
 const packageFields = {
   name,

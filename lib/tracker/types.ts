@@ -27,6 +27,7 @@ export interface Project extends TrackerTimestamps {
   health: (typeof PROJECT_HEALTH)[number];
   target_date: string | null;
   definition_of_done: string | null;
+  notes: string | null;
 }
 export interface Provenance {
   source_type: string | null;
@@ -112,3 +113,16 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   blocked: "Blocked",
   done: "Done",
 };
+
+export interface ProjectAttachment extends TrackerTimestamps {
+  id: string;
+  project_id: string;
+  kind: "file" | "link";
+  name: string;
+  description: string | null;
+  url: string | null;
+  storage_path: string | null;
+  size_bytes: number | null;
+  content_type: string | null;
+  state: "pending" | "ready";
+}

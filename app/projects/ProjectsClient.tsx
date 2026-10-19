@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImportProject from "./ImportProject";
 import Link from "next/link";
 import { OwnerOnly, WriteButton } from "@/app/RoleControls";
 import {
@@ -26,6 +27,7 @@ export const projectFields: FormField[] = [
   { name: "stage", label: "Stage", type: "select", options: PROJECT_STAGES },
   { name: "health", label: "Health", type: "select", options: PROJECT_HEALTH },
   { name: "goal", label: "Goal", type: "textarea" },
+  { name: "notes", label: "Project notes (optional)", type: "textarea" },
   { name: "definition_of_done", label: "Definition of done", type: "textarea" },
 ];
 export default function ProjectsClient({ initial }: { initial: TrackerData }) {
@@ -53,6 +55,9 @@ export default function ProjectsClient({ initial }: { initial: TrackerData }) {
           </WriteButton>
         </OwnerOnly>
       </div>
+      <OwnerOnly>
+        <ImportProject />
+      </OwnerOnly>
       <label className="my-6 flex items-center gap-2 text-sm">
         <input
           type="checkbox"
