@@ -5177,6 +5177,11 @@ actual private file upload/download bytes, incomplete-file handling,
 archive/restore and viewer read/download-only access. All 97 signed-out
 page/API method checks passed. No dependency packages were added.
 
-Hosted application and acceptance remain pending 0041 then 0042 in
-Supabase SQL Editor. SETUP.md documents the whole-file migration steps.
-Commit locally first; publish to Render after the schema is ready.
+Adam applied 0041 and 0042. Production-build acceptance against hosted
+Supabase passed on October 19, 2026: complete hierarchy import and retry,
+invalid-last-child rollback, private file upload/download bytes, resource
+archive/restore, incomplete uploads hidden, viewer API/Storage/RPC denial,
+project notes editing and CSV template/preview. Test records were archived
+and temporary sessions locally revoked. All 97 signed-out checks passed.
+Regression ec0d6a9f-f54a-49b7-a056-ddf56fe27bf5 remained 10 pass / 22 warn /
+0 fail, with no OpenAI calls. SETUP.md records hosted acceptance.

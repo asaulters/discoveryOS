@@ -379,10 +379,25 @@ the Supabase-owned Storage schema, and tests private object policies,
 resource roles, atomic import/rollback and retries. The browser suite uses
 an isolated Storage protocol fixture backed by these real RLS policies,
 including actual uploaded/downloaded bytes. All fixture data stays local.
-Hosted migration application and new-feature acceptance are pending.
+Adam applied 0041 and 0042. Production-build acceptance against hosted
+Supabase passed on October 19, 2026.
 
 Local validation passed: production build, typecheck, lint, all 71 existing
 self-tests, tracker model/request-origin tests, CSV parser/template checks,
 37-table isolated PostgreSQL/RLS tests and the full tracker/discovery/browser
 suite including resources/import. All 97 signed-out route/method checks
-passed. Hosted verification follows the two migrations above.
+passed. Hosted Supabase verification passed after applying both migrations.
+
+
+Post-migration hosted acceptance verified the private bucket and 25 MiB
+limit, full CSV project/work-package/task/subtask creation, idempotent retry,
+invalid-last-child rollback, and viewer RPC rejection. Actual private file
+bytes uploaded and downloaded with attachment disposition; anonymous reads,
+viewer uploads and write APIs were denied. Incomplete uploads were hidden
+from viewers; resource archive/restore and protected downloads worked.
+Production browser checks verified project notes editing, private download,
+viewer read-only resources and CSV template/preview. Verification records
+were archived, retaining their small private file and event history;
+temporary sessions were revoked locally. All 97 signed-out checks passed.
+Regression run `ec0d6a9f-f54a-49b7-a056-ddf56fe27bf5` remained
+10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.
