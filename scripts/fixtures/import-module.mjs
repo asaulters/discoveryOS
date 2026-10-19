@@ -23,6 +23,7 @@ const csv = url("lib/tracker/csv.ts", {
 export async function importModules() {
   return {
     ...(await import(csv)),
+    ...(await import(url("lib/tracker/csv-formatter.ts", { "./csv": csv }))),
     ...(await import(url("lib/tracker/csv-template.ts", { "./csv": csv }))),
   };
 }

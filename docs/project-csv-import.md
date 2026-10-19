@@ -12,6 +12,35 @@ checklist subtasks. It does not update an existing project or overwrite
 meeting data. Blank optional cells use the normal tracker defaults.
 Files may be up to 2 MB and contain up to 2,000 data rows.
 
+## Format an existing spreadsheet
+
+If a file does not match the template, upload it under **Project CSV** and
+click **Format CSV**. Nothing is saved while formatting.
+
+1. Map each source column to a DiscoveryOS column. Common headings such as
+   `Item Type`, `ID`, `Parent ID` and `Title` are suggested automatically.
+   Check these mappings; **Ignore column** excludes that column.
+2. Review the proposed value changes. The formatter standardizes row types
+   (`Work Package` → `work_package`), common statuses (`In progress` → `doing`),
+   sizes (`Small` → `s`) and subtask checkboxes (`Yes` → `true`). It clears
+   non-applicable fields, including `sort_order` on a project. Nonempty ignored
+   values and cleared values appear in the correction table.
+3. Accept the changes using the checkbox. If validation flags a problem,
+   correct it in **Formatted CSV (editable)**. Validation updates as you type
+   and shows the next issue after the current one is fixed. Keys and parent
+   links are kept as supplied; missing parents, duplicate keys, unknown values
+   and ambiguous dates need your input. Dates must use `YYYY-MM-DD`.
+4. Click **Download formatted CSV** to keep a corrected copy, or **Use formatted
+   CSV** to return to the import preview. Review that preview and click
+   **Create project from CSV** when ready.
+
+Changes to column mappings regenerate the formatted CSV and reset manual
+edits and the acceptance checkbox. **Reset CSV edits** restores the generated
+version. Malformed CSV quoting or inconsistent column counts must be corrected
+in the source spreadsheet before formatting. The original file is unchanged.
+The formatter runs locally in your browser; the existing owner authorization,
+server validation and atomic import still apply when you create the project.
+
 ## Required columns
 
 | Column | Meaning |

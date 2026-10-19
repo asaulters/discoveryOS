@@ -89,3 +89,93 @@ assert.equal(
 console.log(
   "PASS: CSV template, BOM/CRLF, quoted commas/newlines/escaped quotes, arbitrary row order, hierarchy, duplicate keys, row-specific validation, dates, blocked reasons and size/row limits.",
 );
+
+const { suggestMapping, formatProjectCsv, checkFormattedCsv, writeProjectCsv } =
+  await importModules();
+const messy =
+  "Item Type,ID,Parent ID,Title,Order,Status,Size,Done,Extra\nProject,p,,Project,0,Done,,,keep this\nWork Package,w,p,Package,1,Not started,,,\nTask,t,w,Task,2,In progress,Small,,\nSub-task,s,t,Check,0,,,Yes,\n";
+const mapping = suggestMapping(readCsv(messy)[0].cells);
+const formatted = formatProjectCsv(messy, mapping);
+assert.deepEqual(parse(formatted.csv).counts, {
+  project: 1,
+  work_package: 1,
+  task: 1,
+  subtask: 1,
+});
+assert.equal(parse(formatted.csv).rows[0].data.sort_order, undefined);
+assert.equal(parse(formatted.csv).rows[2].data.status, "doing");
+assert.equal(parse(formatted.csv).rows[3].data.is_done, true);
+assert(
+  formatted.changes.some(
+    (c) =>
+      c.field === "sort_order" &&
+      c.line === 2 &&
+      c.before === "0" &&
+      c.after === "",
+  ),
+);
+assert(
+  formatted.changes.some(
+    (c) =>
+      c.field === "Extra" &&
+      c.before === "keep this" &&
+      c.reason === "Ignored source column",
+  ),
+);
+assert.equal(checkFormattedCsv(formatted.csv).length, 0);
+assert.deepEqual(
+  formatProjectCsv(template, suggestMapping(readCsv(template)[0].cells))
+    .changes,
+  [],
+);
+assert.throws(
+  () =>
+    formatProjectCsv(
+      messy,
+      mapping.map(() => "name"),
+    ),
+  /only once/,
+);
+assert.throws(
+  () =>
+    formatProjectCsv(
+      messy,
+      mapping.map(() => ""),
+    ),
+  /Map a source column/,
+);
+assert.throws(
+  () => formatProjectCsv(messy + "task,too,few", mapping),
+  /expected.*columns/,
+);
+assert.throws(
+  () =>
+    formatProjectCsv('type,key,parent_key,name\nproject,p,,"open', [
+      "type",
+      "key",
+      "parent_key",
+      "name",
+    ]),
+  /not closed/,
+);
+assert.match(
+  checkFormattedCsv(formatted.csv.replace("task,t,w,", "task,t,missing,"))[0],
+  /parent_key/,
+);
+const multiline = writeProjectCsv([
+  { type: "project", key: "p", name: "A, B", notes: 'line 1\nline 2 "quoted"' },
+]);
+assert.equal(parse(multiline).rows[0].data.notes, 'line 1\nline 2 "quoted"');
+const invalidDate = writeProjectCsv([
+  { type: "project", key: "p", name: "Dates", target_date: "10/11/2026" },
+]);
+assert.match(
+  checkFormattedCsv(
+    formatProjectCsv(invalidDate, suggestMapping(readCsv(invalidDate)[0].cells))
+      .csv,
+  )[0],
+  /target_date/,
+);
+console.log(
+  "PASS: formatter mapping, explicit removal reports, type/status/size/checkbox normalization, editable hierarchy validation, ambiguous date rejection and multiline CSV round trip.",
+);

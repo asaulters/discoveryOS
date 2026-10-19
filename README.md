@@ -51,6 +51,13 @@ checkpoint of what's done and what's next, and
 practical guidance on running DiscoveryOS in a real (non-scenario) pilot
 meeting.
 
+## Project CSV formatter
+
+On **Projects → Import project CSV**, upload your spreadsheet CSV and click
+**Format CSV**. Map columns, review suggested corrections, and fix any flagged
+parent links or values in the editable preview. Then download the corrected
+CSV or use it for the project import. [Full instructions and column guide](docs/project-csv-import.md).
+
 ## Stack
 
 - Next.js App Router + TypeScript

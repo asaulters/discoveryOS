@@ -60,6 +60,66 @@ try {
     ).length,
     0,
   );
+  // Formatting is local and requires review before any values are discarded.
+  await importer.getByLabel("Project CSV", { exact: true }).setInputFiles({
+    name: "needs-formatting.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      "Item Type,ID,Parent ID,Title,Order\nProject,p,,Formatted project,0\nWork Package,w,missing,Package,1",
+    ),
+  });
+  await importer
+    .getByRole("button", { name: "Format CSV", exact: true })
+    .click();
+  const formatter = importer.getByRole("region", {
+    name: "CSV formatter",
+    exact: true,
+  });
+  await formatter
+    .getByText("Field does not apply to project", { exact: true })
+    .waitFor();
+  const useFormatted = formatter.getByRole("button", {
+    name: "Use formatted CSV",
+    exact: true,
+  });
+  assert.equal(await useFormatted.isEnabled(), false);
+  await formatter.getByRole("checkbox").check();
+  assert.equal(
+    await useFormatted.isEnabled(),
+    false,
+    "Missing parents must still be fixed",
+  );
+  const editor = formatter.getByLabel("Formatted CSV (editable)", {
+    exact: true,
+  });
+  await editor.fill(
+    (await editor.inputValue()).replace(
+      "work_package,w,missing,",
+      "work_package,w,p,",
+    ),
+  );
+  await formatter.getByRole("status").waitFor();
+  const formattedDownload = page.waitForEvent("download");
+  await formatter
+    .getByRole("button", { name: "Download formatted CSV", exact: true })
+    .click();
+  assert.match(
+    readFileSync(await (await formattedDownload).path(), "utf8"),
+    /work_package,w,p,/,
+  );
+  await useFormatted.click();
+  await importer
+    .getByRole("heading", { name: "Preview: Formatted project", exact: true })
+    .waitFor();
+  assert.equal(
+    (
+      await page.evaluate(
+        async () => (await (await fetch("/api/projects")).json()).projects,
+      )
+    ).length,
+    0,
+    "Formatting and preview never create projects",
+  );
   await importer.getByLabel("Project CSV", { exact: true }).setInputFiles({
     name: "project.csv",
     mimeType: "text/csv",

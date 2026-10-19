@@ -5185,3 +5185,24 @@ project notes editing and CSV template/preview. Test records were archived
 and temporary sessions locally revoked. All 97 signed-out checks passed.
 Regression ec0d6a9f-f54a-49b7-a056-ddf56fe27bf5 remained 10 pass / 22 warn /
 0 fail, with no OpenAI calls. SETUP.md records hosted acceptance.
+
+## Project CSV formatter
+
+Added a browser-local formatter to Projects → Import project CSV. Owners can
+map spreadsheet headings, review row-type/status/size/checkbox corrections,
+and explicitly accept any cleared non-applicable fields or ignored values.
+An editable CSV preview uses the existing strict import validation; missing
+parents, invalid dates and other unresolved values block download/use until
+fixed. Downloading or returning to the import preview creates no records.
+The existing server authorization, RLS and atomic import remain in place.
+No database migration or new dependencies are required. Instructions are in
+README.md and docs/project-csv-import.md.
+
+Parser/formatter tests cover mapping, removal reports, normalization,
+multiline quotes, hierarchy validation and ambiguous-date rejection. Browser
+acceptance covers explicit review, editing a missing parent, download bytes
+and returning to the import preview without creating data. Production build,
+typecheck and lint passed. Existing regression 30259e5a-bf07-4a93-8e97-60c527eb7c94
+remained 10 pass / 22 warn / 0 fail, with no OpenAI calls.
+The full tracker/discovery/resources browser suite and all 97 signed-out
+route/method checks passed, including existing viewer write denial.

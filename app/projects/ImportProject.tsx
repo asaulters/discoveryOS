@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import Link from "next/link";
+import CsvFormatter from "./CsvFormatter";
 import {
   parseProjectCsv,
   MAX_IMPORT_BYTES,
@@ -14,6 +15,8 @@ import {
 } from "@/app/tracker/shared";
 export default function ImportProject() {
   const selection = useRef(0);
+  const [source, setSource] = useState(""),
+    [formatOpen, setFormatOpen] = useState(false);
   const [open, setOpen] = useState(false),
     [csv, setCsv] = useState(""),
     [preview, setPreview] = useState<ReturnType<typeof parseProjectCsv> | null>(
@@ -90,14 +93,17 @@ export default function ImportProject() {
                 setPreview(null);
                 setCreated(null);
                 setCsv("");
+                setSource("");
+                setFormatOpen(false);
                 setRequestId("");
                 if (!file) return;
                 try {
                   if (file.size > MAX_IMPORT_BYTES)
                     throw new Error("CSV must be 2 MB or smaller");
-                  const text = await file.text(),
-                    parsed = parseProjectCsv(text);
+                  const text = await file.text();
                   if (version !== selection.current) return;
+                  setSource(text);
+                  const parsed = parseProjectCsv(text);
                   setCsv(text);
                   setPreview(parsed);
                   setRequestId(crypto.randomUUID());
@@ -110,12 +116,37 @@ export default function ImportProject() {
               }}
             />
           </label>
-          {error && (
+          <p className="my-3 text-sm">
+            Trouble with your spreadsheet? Upload it above, then format its
+            columns and values before importing.
+          </p>
+          <button
+            className={buttonClass}
+            disabled={busy || !source}
+            onClick={() => setFormatOpen(!formatOpen)}
+          >
+            {formatOpen ? "Close formatter" : "Format CSV"}
+          </button>
+          {formatOpen && source && (
+            <CsvFormatter
+              key={source}
+              source={source}
+              onUse={(formatted) => {
+                setCsv(formatted);
+                setPreview(parseProjectCsv(formatted));
+                setRequestId(crypto.randomUUID());
+                setCreated(null);
+                setError("");
+                setFormatOpen(false);
+              }}
+            />
+          )}
+          {error && !formatOpen && (
             <p role="alert" className="my-3 text-sm text-red-700">
               {error}
             </p>
           )}
-          {preview && (
+          {preview && !formatOpen && (
             <div className="mt-4">
               <h3 className="font-medium">Preview: {preview.projectName}</h3>
               <p className="my-2 text-sm">

@@ -36,7 +36,7 @@ export interface ImportRow {
   data: Record<string, string | number | boolean | null>;
   line: number;
 }
-const allowed: Record<ImportType, string[]> = {
+export const CSV_FIELDS_BY_TYPE: Record<ImportType, string[]> = {
   project: [
     "name",
     "notes",
@@ -155,7 +155,7 @@ export function parseProjectCsv(csv: string) {
         header.map((h, i) => [h, r.cells[i].trim()]),
       ),
       type = values.type as ImportType;
-    if (!Object.hasOwn(allowed, type))
+    if (!Object.hasOwn(CSV_FIELDS_BY_TYPE, type))
       throw new Error(
         `Line ${r.line}: type must be project, work_package, task or subtask`,
       );
@@ -170,7 +170,7 @@ export function parseProjectCsv(csv: string) {
     const data: Record<string, unknown> = {};
     for (const [field, value] of Object.entries(values)) {
       if (["type", "key", "parent_key"].includes(field) || !value) continue;
-      if (!allowed[type].includes(field))
+      if (!CSV_FIELDS_BY_TYPE[type].includes(field))
         throw new Error(`Line ${r.line}: ${field} does not apply to ${type}`);
       if (field === "sort_order") {
         if (!/^\d+$/.test(value))
@@ -221,7 +221,7 @@ export function parseProjectCsv(csv: string) {
       );
   }
   const counts = Object.fromEntries(
-    Object.keys(allowed).map((t) => [
+    Object.keys(CSV_FIELDS_BY_TYPE).map((t) => [
       t,
       rows.filter((r) => r.type === t).length,
     ]),
