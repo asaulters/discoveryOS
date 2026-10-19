@@ -291,7 +291,8 @@ Before deploying this change on Render, run the whole
 Editor, after 0039. It adds optional work-package notes and task checklist
 items with owner/viewer RLS and atomic activity events. Existing task notes
 and meeting/project data are retained. No environment variables change.
-Hosted application of 0040 is pending; deploy after applying it.
+Adam applied 0040, and production-build acceptance against hosted Supabase
+passed on October 19, 2026.
 
 Work-package create/edit forms now include optional Notes, displayed on the
 package. Project quick-add and My week task creation include optional Notes,
@@ -316,4 +317,15 @@ self-tests, tracker model/request-origin checks, 36-table isolated SQL/RLS,
 the full tracker/discovery browser suite and 91 signed-out route checks.
 New browser acceptance includes repeated keyboard entry and focus, optional
 notes persistence, rejected-save rollback, checklist archive/restore and
-viewer API/direct REST denial. Hosted acceptance follows application of 0040.
+viewer API/direct REST denial. Hosted acceptance passed after application of 0040.
+
+
+Post-0040 hosted verification confirmed package/task/checklist notes saved
+at creation, repeated browser checklist entry, reload persistence,
+List/Board completion and reopening, parent status remaining independent,
+viewer read-only controls and denied viewer API/direct REST writes.
+Anonymous checklist reads were denied. Checklist changes appeared in
+project activity. All verification rows were archived and temporary test
+sessions revoked locally. All 91 signed-out checks passed again. Existing
+regression run `fd134a6c-f494-4191-acb9-1d9291226d34` remained
+10 pass, 22 existing warnings, 0 failures. No OpenAI calls were made.

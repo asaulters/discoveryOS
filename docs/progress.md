@@ -5126,8 +5126,8 @@ Migration 0040 adds work_packages.notes and task_subtasks with existing
 owner/viewer RLS, archive-only deletion and atomic project activity events.
 The API checks task/package/project archive state, and checklist fetching
 is paginated with bounded parent-id batches. No AI calls or new secrets.
-Apply 0040 to Supabase before deploying these changes to Render; hosted
-migration application and acceptance remain pending.
+Adam applied 0040; production-build acceptance against hosted Supabase
+passed on October 19, 2026. These changes are ready for Render deployment.
 
 Validation passed: typecheck, lint, production build, 71 existing self-tests,
 tracker model/request-origin checks, the 36-table migration/RLS suite,
@@ -5137,3 +5137,11 @@ list/board/pane completion, rejected-save rollback, reload, archive/restore,
 archived-parent rejection, viewer read-only controls/API/direct REST denial.
 All 91 signed-out route/method checks passed. SETUP.md includes the single
 whole-file migration step required before deployment.
+
+Hosted acceptance verified notes at creation, repeated checklist entry,
+reload persistence, List/Board complete/reopen, independent parent status,
+viewer read-only UI and denied viewer API/direct REST writes. Anonymous
+checklist reads were denied and activity events verified. Test rows were
+archived; temporary sessions locally revoked. All 91 signed-out checks
+passed and regression fd134a6c-f494-4191-acb9-1d9291226d34 remained
+10 pass / 22 warn / 0 fail, without OpenAI calls.
