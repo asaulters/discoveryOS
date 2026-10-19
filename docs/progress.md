@@ -5206,3 +5206,28 @@ typecheck and lint passed. Existing regression 30259e5a-bf07-4a93-8e97-60c527eb7
 remained 10 pass / 22 warn / 0 fail, with no OpenAI calls.
 The full tracker/discovery/resources browser suite and all 97 signed-out
 route/method checks passed, including existing viewer write denial.
+
+## Saved hierarchy ordering
+
+Added owner-only up/down controls for work packages, tasks and subtasks.
+List moves stay within the parent; board task moves stay within their status
+column without changing status. The atomic, security-invoker RPC serializes
+moves with parent locks, normalizes duplicate legacy positions, skips archived
+siblings and rejects archived ancestors. Reordering uses the existing activity
+triggers; failed event writes roll back every sibling update. Viewers see the
+saved order without write controls. Checklist ordering also applies in the
+task pane, and new checklist items append after reordered siblings.
+
+0043_tracker_reordering.sql preserves existing checklist order and adds its
+order column, append trigger and the owner-checked reorder RPC. It must be
+applied in Supabase before this code is pushed/deployed. SETUP.md has the
+whole-file migration step. Hosted migration/deployment acceptance is pending.
+
+Validation passed: typecheck, lint, production build, CSV compatibility tests,
+all migrations/RLS tests, full existing tracker/discovery/resources browser
+suite plus reorder acceptance, and 98 signed-out route/method checks. Tests
+cover duplicate positions, move boundaries, archived siblings/parents,
+board-scoped moves, reload persistence, append order, rejected-save feedback,
+atomic event rollback and viewer/anonymous denial. Existing regression
+3edc64fd-cd24-42d7-aa28-af4dc1068c9c remained 10 pass / 22 warn / 0 fail,
+with no OpenAI calls. No new packages or environment variables are required.

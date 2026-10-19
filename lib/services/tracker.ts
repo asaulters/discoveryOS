@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { getAuth } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
@@ -140,6 +141,7 @@ export async function getTracker(projectId?: string): Promise<TrackerData> {
             "task_id",
             tasks.slice(offset, offset + 100).map((t) => t.id),
           )
+          .order("sort_order")
           .order("created_at")
           .order("id"),
       )),
@@ -411,4 +413,28 @@ export async function mutateTracker(
     .single();
   check(r.error);
   return r.data;
+}
+
+export async function reorderTracker(body: unknown) {
+  const auth = await getAuth();
+  if (!auth.userId) throw new TrackerError("Sign in required", 401);
+  if (auth.role !== "owner") throw new TrackerError("Owner role required", 403);
+  const input = z
+    .object({
+      kind: z.enum(["work_package", "task", "subtask"]),
+      id: z.uuid(),
+      direction: z.enum(["up", "down"]),
+      status: z.enum(["todo", "doing", "blocked", "done"]).optional(),
+    })
+    .strict()
+    .parse(body);
+  const db = await createServerSupabaseClient();
+  const { error } = await db.rpc("reorder_tracker_item", {
+    p_kind: input.kind,
+    p_id: input.id,
+    p_direction: input.direction,
+    p_status: input.status ?? null,
+  });
+  check(error);
+  return { ok: true };
 }

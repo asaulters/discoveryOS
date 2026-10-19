@@ -1,5 +1,6 @@
 "use client";
 import Evidence from "./Evidence";
+import ReorderControls from "./ReorderControls";
 import Subtasks from "./Subtasks";
 
 import {
@@ -276,11 +277,13 @@ export interface TaskActions {
   change: (task: Task, status: TaskStatus) => void;
   busy: boolean;
   renderSubtasks?: (task: Task, disabled: boolean) => ReactNode;
+  renderReorder?: (task: Task, disabled: boolean, board?: boolean) => ReactNode;
 }
 export function TaskRow({
   task,
   context,
   renderSubtasks,
+  renderReorder,
   open,
   change,
   busy,
@@ -305,6 +308,7 @@ export function TaskRow({
       <span className="text-xs text-neutral-500">
         {task.due_date ?? "No date"}
       </span>
+      {renderReorder?.(task, busy || !!task.archived_at)}
       <TaskStatusMenu task={task} busy={busy} change={change} />
       {renderSubtasks?.(task, busy || !!task.archived_at)}
       <div className="w-full">
@@ -321,6 +325,7 @@ export function TaskRow({
 export function TaskBoard({
   rows,
   renderSubtasks,
+  renderReorder,
   open,
   change,
   busy,
@@ -366,6 +371,14 @@ export function TaskBoard({
                     {row.task.archived_at ? " · Archived" : ""}
                   </p>
                   <Evidence item={row.task} />
+                  {renderReorder?.(
+                    row.task,
+                    busy ||
+                      !!row.project.archived_at ||
+                      !!row.workPackage.archived_at ||
+                      !!row.task.archived_at,
+                    true,
+                  )}
                   <TaskStatusMenu
                     task={row.task}
                     busy={
@@ -529,7 +542,26 @@ export function useTaskActions(
       open,
       change,
       busy: tracker.busy,
-      ...(inlineSubtasks ? { renderSubtasks } : {}),
+      ...(inlineSubtasks
+        ? {
+            renderSubtasks,
+            renderReorder: (task: Task, disabled: boolean, board = false) => (
+              <ReorderControls
+                kind="task"
+                id={task.id}
+                name={task.title}
+                siblings={tracker.data.tasks.filter(
+                  (t) =>
+                    t.work_package_id === task.work_package_id &&
+                    (!board || t.status === task.status),
+                )}
+                status={board ? task.status : undefined}
+                disabled={disabled}
+                mutate={tracker.mutate}
+              />
+            ),
+          }
+        : {}),
     },
     pane: task && (
       <TaskPane

@@ -401,3 +401,22 @@ were archived, retaining their small private file and event history;
 temporary sessions were revoked locally. All 97 signed-out checks passed.
 Regression run `ec0d6a9f-f54a-49b7-a056-ddf56fe27bf5` remained
 10 pass, 22 existing warnings, 0 failures, with no OpenAI calls.
+
+## Saved work-package, task and subtask ordering
+
+Before deploying this update, run the **entire**
+`supabase/migrations/0043_tracker_reordering.sql` file in the Supabase SQL
+editor. Run it once, after 0042. It adds checklist ordering, preserves the
+existing checklist sequence, appends new checklist items, and creates the
+owner-only atomic reorder function. Existing WP/task order fields are reused.
+No environment variables or extra packages are needed.
+
+Owners use the ↑ / ↓ controls beside work packages, tasks and subtasks.
+Items move within their current parent. List view uses the full task order;
+board view moves tasks within their status column without changing status.
+The saved order is shared by users and survives refresh. Archived items
+are skipped, and archived parents must be restored before reordering.
+Viewers see the saved order with no reorder controls.
+
+Checks: `npm run typecheck`, `npm run lint`, `npm run test:auth-rls`,
+`npm run test:project-import`, `npm run test:tracker-ui`, `npm run build`.

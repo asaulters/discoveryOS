@@ -1,4 +1,5 @@
 "use client";
+import ReorderControls from "./ReorderControls";
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import {
   OwnerOnly,
@@ -94,6 +95,14 @@ export default function Subtasks({
                 {s.archived_at ? " (Archived)" : ""}
               </span>
             </label>
+            <ReorderControls
+              kind="subtask"
+              id={s.id}
+              name={s.title}
+              siblings={rows}
+              disabled={disabled}
+              mutate={mutate}
+            />
             <OwnerOnly>
               <WriteButton
                 className="text-xs text-neutral-500 underline"

@@ -207,6 +207,17 @@ let queue = Promise.resolve();
             await db.exec("commit");
             return send(res, 200, r.rows[0].role);
           }
+          if (url.pathname === "/rest/v1/rpc/reorder_tracker_item") {
+            const body = JSON.parse(raw);
+            await db.query("select public.reorder_tracker_item($1,$2,$3,$4)", [
+              body.p_kind,
+              body.p_id,
+              body.p_direction,
+              body.p_status ?? null,
+            ]);
+            await db.exec("commit");
+            return send(res, 200, null);
+          }
           if (url.pathname === "/rest/v1/rpc/import_project_csv") {
             const body = JSON.parse(raw),
               r = await db.query(

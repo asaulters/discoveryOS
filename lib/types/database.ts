@@ -1050,6 +1050,15 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      reorder_tracker_item: {
+        Args: {
+          p_kind: string;
+          p_id: string;
+          p_direction: string;
+          p_status?: string | null;
+        };
+        Returns: undefined;
+      };
       import_project_csv: {
         Args: { p_request_id: string; p_rows: unknown };
         Returns: {

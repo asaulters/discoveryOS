@@ -51,6 +51,13 @@ checkpoint of what's done and what's next, and
 practical guidance on running DiscoveryOS in a real (non-scenario) pilot
 meeting.
 
+## Reorder project work
+
+Owners can use the ↑ / ↓ controls beside work packages, tasks and subtasks
+to save their order within the same parent. Board controls reorder tasks
+within their status column. Apply migration **0043** before deploying this
+update; see [SETUP.md](SETUP.md#saved-work-package-task-and-subtask-ordering).
+
 ## Project CSV formatter
 
 On **Projects → Import project CSV**, upload your spreadsheet CSV and click

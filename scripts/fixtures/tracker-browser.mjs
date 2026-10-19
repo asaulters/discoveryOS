@@ -141,7 +141,8 @@ const origin = "http://127.0.0.1:3035";
     await page.getByLabel("Show archived", { exact: true }).check();
     await page.getByRole("heading", { name: /Second work package/ }).waitFor();
     await page.getByRole("link", { name: "My week", exact: true }).click();
-    await page.getByRole("button", { name: /Browser task/ }).waitFor();
+    await page.waitForURL("**/my-week");
+    await page.getByRole("button", { name: /^Browser task/ }).waitFor();
     await page.getByRole("button", { name: "By project", exact: true }).click();
     await page
       .getByRole("heading", { name: "Browser acceptance project", exact: true })

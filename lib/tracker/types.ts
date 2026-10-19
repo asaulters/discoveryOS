@@ -65,6 +65,7 @@ export interface Subtask extends TrackerTimestamps {
   title: string;
   notes: string | null;
   is_done: boolean;
+  sort_order: number;
 }
 export interface ProjectEvent extends Record<string, unknown> {
   id: string;

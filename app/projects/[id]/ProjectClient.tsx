@@ -1,4 +1,5 @@
 "use client";
+import ReorderControls from "@/app/tracker/ReorderControls";
 import Evidence from "@/app/tracker/Evidence";
 import Raid from "@/app/tracker/Raid";
 import ProjectResources from "./ProjectResources";
@@ -294,6 +295,14 @@ export default function ProjectClient({
                   />
                   <OwnerOnly>
                     <div className="flex gap-2">
+                      <ReorderControls
+                        kind="work_package"
+                        id={w.id}
+                        name={w.name}
+                        siblings={packages}
+                        disabled={tracker.busy || !!project.archived_at}
+                        mutate={tracker.mutate}
+                      />
                       <WriteButton
                         disabled={!!project.archived_at}
                         className={buttonClass}

@@ -1,3 +1,4 @@
+import { checkReordering } from "./check-reordering-rls.mjs";
 import { checkProjectResources } from "./check-project-resources-rls.mjs";
 import { storageSchema } from "./fixtures/storage-schema.mjs";
 import { checkSubtasks } from "./check-subtasks-rls.mjs";
@@ -352,6 +353,7 @@ try {
     );
   });
   await checkMeetingProject(db, asRole, owner, viewer);
+  await checkReordering(db, asRole, owner, viewer);
   await checkSubtasks(db, asRole, owner, viewer);
   await checkProjectResources(db, asRole, owner, viewer);
   // Event failure rolls the originating mutation back; there is no partial save.
