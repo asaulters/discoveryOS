@@ -1,3 +1,4 @@
+import { checkProjectUpdates } from "./check-project-updates-rls.mjs";
 import { checkReordering } from "./check-reordering-rls.mjs";
 import { checkProjectResources } from "./check-project-resources-rls.mjs";
 import { storageSchema } from "./fixtures/storage-schema.mjs";
@@ -52,7 +53,7 @@ try {
         .filter((p) => p.tablename === table)
         .map((p) => p.cmd)
         .sort(),
-      table === "project_events"
+      ["project_events", "project_csv_updates"].includes(table)
         ? ["INSERT", "SELECT"]
         : ["DELETE", "INSERT", "SELECT", "UPDATE"],
     );
@@ -86,6 +87,8 @@ try {
           "raid_items",
           "task_subtasks",
           "project_attachments",
+          "project_csv_keys",
+          "project_csv_updates",
         ].includes(table)
       ) {
         for (const privilege of [
@@ -354,6 +357,7 @@ try {
   });
   await checkMeetingProject(db, asRole, owner, viewer);
   await checkReordering(db, asRole, owner, viewer);
+  await checkProjectUpdates(db, asRole, owner, viewer);
   await checkSubtasks(db, asRole, owner, viewer);
   await checkProjectResources(db, asRole, owner, viewer);
   // Event failure rolls the originating mutation back; there is no partial save.

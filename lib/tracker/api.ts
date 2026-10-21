@@ -7,7 +7,10 @@ export async function trackerResponse(
   status = 200,
 ) {
   try {
-    return NextResponse.json(await fn(), { status });
+    const result = await fn();
+    return result instanceof Response
+      ? result
+      : NextResponse.json(result, { status });
   } catch (error) {
     if (error instanceof ZodError)
       return NextResponse.json(

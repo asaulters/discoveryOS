@@ -5238,3 +5238,43 @@ changes, and new-subtask append order. Viewer reorder controls were absent and
 API/RPC/direct REST writes were denied. Verification records were archived and
 temporary sessions locally revoked. Deployment code commit: e12e3b6.
 All 98 signed-out route/method checks also passed against live Render.
+
+## Daily project CSV intake
+
+Added project-level Daily CSV updates with current-baseline export, server-side
+validation and before/after preview, explicit review and atomic application.
+Stable record IDs and persisted project-local keys identify existing records;
+a first older baseline can match unique exact names within resolved parents.
+Missing, ambiguous, wrong-project, archived and reparenting attempts stop the
+upload. New children require action=create. Blank cells and omitted rows preserve
+existing values; clear_fields explicitly clears allowed nullable fields.
+Progress notes append dated context without replacing the existing notes.
+
+0044_project_csv_updates.sql adds RLS-protected stable-key bindings and immutable
+upload history containing original CSVs, changes and before/after snapshots.
+The security-invoker update RPC checks owner role, locks the hierarchy, rejects
+stale previews, deduplicates retries/file content and rolls back every write if
+any row/event fails. Viewers can read/export/history-download but cannot update.
+No runtime service-role key, OpenAI calls, new packages or environment variables.
+
+README.md and SETUP.md describe the workflow and whole-file migration step.
+The Claude handoff/prompt/schema is docs/claude-project-updates.md, with an
+illustrative docs/project-update-template.csv. Adam's supplied triage file has
+75 data rows (1 project, 9 WPs, 42 tasks, 23 subtasks). A private cleaned reference
+and handoff were saved in Downloads/DiscoveryOS-daily-CSV-2026-10-21. Its original
+keys remain unchanged; wp7/wp8 blocker text was preserved in WP notes because
+blocked_reason is task-only. The original download was not modified and its
+private project data was not added to the repository.
+
+Passed: typecheck, lint, production build, existing CSV importer/formatter tests,
+new daily-update parser tests, all migrations and 39-table RLS/security tests,
+full existing tracker/discovery/resources browser suite plus new intake coverage,
+and all 100 signed-out route/method checks. Tests cover stable identity/renaming,
+explicit creation, notes/date preservation, progress deduplication, explicit clears,
+source-download bytes, uploaded history, exported IDs, idempotent retries, stale
+preview rejection, cross-project and archive protection, atomic event rollback,
+and viewer/anonymous denial. Existing regression 664dbbae-6ba2-42da-9d47-9bb8b2364525
+remained 10 pass / 22 warn / 0 fail, without OpenAI calls.
+
+0044 must be applied in hosted Supabase before this code is pushed/deployed.
+Hosted migration and deployment verification are pending Adam's SQL step.

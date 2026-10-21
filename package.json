@@ -13,7 +13,8 @@
     "test:request-origin": "node scripts/check-request-origin.mjs",
     "test:tracker-model": "node scripts/check-tracker-model.mjs",
     "test:tracker-ui": "node scripts/check-tracker-ui.mjs",
-    "test:project-import": "node scripts/check-project-import.mjs"
+    "test:project-import": "node scripts/check-project-import.mjs",
+    "test:project-updates": "node scripts/check-project-updates.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

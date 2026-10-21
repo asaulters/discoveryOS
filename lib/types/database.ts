@@ -772,6 +772,52 @@ export type Database = {
         Update: Partial<ProjectAttachment>;
         Relationships: [];
       };
+      project_csv_keys: {
+        Row: {
+          project_id: string;
+          key: string;
+          kind: string;
+          record_id: string;
+        };
+        Insert: {
+          project_id: string;
+          key: string;
+          kind: string;
+          record_id: string;
+        };
+        Update: Partial<{ key: string; kind: string; record_id: string }>;
+        Relationships: [];
+      };
+      project_csv_updates: {
+        Row: {
+          id: string;
+          project_id: string;
+          request_id: string;
+          content_hash: string;
+          report_date: string;
+          summary: string;
+          source_csv: string;
+          changes: unknown;
+          before_state: unknown;
+          after_state: unknown;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          project_id: string;
+          request_id: string;
+          content_hash: string;
+          report_date: string;
+          summary: string;
+          source_csv: string;
+          changes: unknown;
+          before_state: unknown;
+          after_state: unknown;
+          created_by: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       task_subtasks: {
         Row: Subtask;
         Insert: Partial<Subtask> & Pick<Subtask, "task_id" | "title">;
@@ -1050,6 +1096,27 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_project_csv_state: {
+        Args: { p_project_id: string };
+        Returns: unknown;
+      };
+      project_csv_snapshot: {
+        Args: { p_project_id: string };
+        Returns: unknown;
+      };
+      apply_project_csv_update: {
+        Args: {
+          p_project_id: string;
+          p_request_id: string;
+          p_revision: string;
+          p_report_date: string;
+          p_summary: string;
+          p_csv: string;
+          p_operations: unknown;
+          p_changes: unknown;
+        };
+        Returns: { id: string; already_applied: boolean };
+      };
       reorder_tracker_item: {
         Args: {
           p_kind: string;

@@ -2,6 +2,7 @@
 import ReorderControls from "@/app/tracker/ReorderControls";
 import Evidence from "@/app/tracker/Evidence";
 import Raid from "@/app/tracker/Raid";
+import ProjectCsvUpdates from "./ProjectCsvUpdates";
 import ProjectResources from "./ProjectResources";
 
 import { useState, type FormEvent } from "react";
@@ -37,6 +38,8 @@ import {
 } from "@/app/tracker/shared";
 function activityDescription(event: ProjectEvent) {
   const after = (event.to_value ?? {}) as Record<string, unknown>;
+  if (event.action === "csv_updated")
+    return `CSV update · ${String(after.report_date || "")} · ${String(after.summary || "Project updated")}`;
   if (event.action.startsWith("resource_") || event.action === "file_uploaded")
     return String(
       (after.resource as { name?: string } | undefined)?.name ?? "Resource",
@@ -202,6 +205,11 @@ export default function ProjectClient({
           </section>
         )}
       </header>
+      <ProjectCsvUpdates
+        projectId={project.id}
+        archived={!!project.archived_at}
+        tracker={tracker}
+      />
       <ProjectResources
         project={project}
         tracker={tracker}

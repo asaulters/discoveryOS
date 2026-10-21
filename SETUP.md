@@ -420,3 +420,32 @@ Viewers see the saved order with no reorder controls.
 
 Checks: `npm run typecheck`, `npm run lint`, `npm run test:auth-rls`,
 `npm run test:project-import`, `npm run test:tracker-ui`, `npm run build`.
+
+## Daily project CSV updates
+
+Before deploying this update, run the **entire**
+`supabase/migrations/0044_project_csv_updates.sql` file once in Supabase's SQL
+editor, after 0043. It adds stable CSV-key bindings, append-only upload history
+with original files and before/after snapshots, and owner-checked atomic update
+functions. Both new tables use RLS; viewers can read but cannot write. No new
+environment variables or packages are needed. Runtime writes use the signed-in
+session and do not use the service-role key or OpenAI.
+
+Inside a project, open **Daily CSV updates**, download its current baseline,
+then upload Claude's daily CSV and review/apply the preview. Blank cells and
+omitted rows preserve existing values; optional values require `clear_fields`
+to clear. New items require `action=create`. IDs/saved keys identify existing
+records; the first older CSV can bind unique exact name/parent matches.
+Ambiguous, archived, wrong-project and reparenting attempts fail. Duplicate
+uploads do not duplicate creates or dated progress notes. A hierarchy change
+after preview rejects the save; preview again before applying.
+
+Give Claude [docs/claude-project-updates.md](docs/claude-project-updates.md)
+and the latest exported baseline. The illustrative format is
+[docs/project-update-template.csv](docs/project-update-template.csv).
+Upload history lists the latest 20 entries with source-file downloads; older
+entries remain stored. This feature does not provide automatic undo.
+
+Validation: `npm run test:project-updates`, `npm run test:project-import`,
+`npm run test:auth-rls`, `npm run test:tracker-ui`, `npm run typecheck`,
+`npm run lint`, `npm run build`.

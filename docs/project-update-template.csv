@@ -1,0 +1,6 @@
+type,key,parent_key,name,notes,status,due_date,target_date,blocked_reason,size,sort_order,acceptance_criteria,requesting_team,sponsor,goal,stage,health,definition_of_done,is_done,record_id,action,clear_fields,report_date,update_summary,progress_note
+project,p1,,Example existing project,,,,,,,,,,,,,,,,,update,,2026-10-21,Discovery completed; implementation started.,
+work_package,wp1,p1,Delivery,,doing,,,,,,,,,,,,,,,update,,,,
+task,t1,wp1,Validate workflow,,done,,,,,,,,,,,,,,,update,,,,Confirmed the workflow with the process owner.
+subtask,s1,t1,Confirm backup owner,,,,,,,,,,,,,,,true,,update,,,,
+task,t_new,wp1,Implement approved change,Newly agreed next step.,todo,,,,,,,,,,,,,,,create,,,,

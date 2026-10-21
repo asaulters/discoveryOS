@@ -122,7 +122,7 @@ let queue = Promise.resolve();
     if (url.pathname === "/__reset") {
       queue = queue.then(async () => {
         await db.exec(
-          "truncate storage.objects,project_attachments,task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
+          "truncate storage.objects,project_csv_updates,project_csv_keys,project_attachments,task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
         );
         send(res, 200, { ok: true });
       });
@@ -206,6 +206,33 @@ let queue = Promise.resolve();
             );
             await db.exec("commit");
             return send(res, 200, r.rows[0].role);
+          }
+          if (url.pathname === "/rest/v1/rpc/get_project_csv_state") {
+            const body = JSON.parse(raw);
+            const result = await db.query(
+              "select public.get_project_csv_state($1) as result",
+              [body.p_project_id],
+            );
+            await db.exec("commit");
+            return send(res, 200, result.rows[0].result);
+          }
+          if (url.pathname === "/rest/v1/rpc/apply_project_csv_update") {
+            const body = JSON.parse(raw);
+            const result = await db.query(
+              "select public.apply_project_csv_update($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb) as result",
+              [
+                body.p_project_id,
+                body.p_request_id,
+                body.p_revision,
+                body.p_report_date,
+                body.p_summary,
+                body.p_csv,
+                JSON.stringify(body.p_operations),
+                JSON.stringify(body.p_changes),
+              ],
+            );
+            await db.exec("commit");
+            return send(res, 200, result.rows[0].result);
           }
           if (url.pathname === "/rest/v1/rpc/reorder_tracker_item") {
             const body = JSON.parse(raw);

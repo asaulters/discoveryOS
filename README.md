@@ -51,6 +51,14 @@ checkpoint of what's done and what's next, and
 practical guidance on running DiscoveryOS in a real (non-scenario) pilot
 meeting.
 
+## Daily project CSV updates
+
+Inside a project, open **Daily CSV updates** to download the current baseline,
+preview Claude's daily file, and apply updates to that project. Blank cells
+and omitted rows preserve existing data; new items require `action=create`.
+Give Claude the [handoff guide and prompt](docs/claude-project-updates.md).
+Apply migration **0044** before deploying; see [SETUP.md](SETUP.md#daily-project-csv-updates).
+
 ## Reorder project work
 
 Owners can use the ↑ / ↓ controls beside work packages, tasks and subtasks
