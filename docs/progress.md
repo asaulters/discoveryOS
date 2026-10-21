@@ -5283,7 +5283,7 @@ behavior for SQLSTATE 40001; verification test projects were archived.
 
 0045 changes this business conflict to PT409 and marks the patched function.
 The app pauses CSV writes until that marker is installed; baseline and history
-reads continue. Follow-up hosted migration/acceptance are pending Adam's SQL step.
+reads continue. Adam applied 0045 and hosted migration/acceptance passed.
 Correction validation passed: production build, typecheck, lint, daily parser,
 39-table migration/RLS suite with an explicit PT409 assertion, and the browser
 suite including paused-write/read-available behavior against an older function.
@@ -5311,3 +5311,16 @@ collapse suite and all 100 signed-out checks. Collapse acceptance covers list/
 board behavior, keyboard access, bulk actions, reload persistence, retained
 drafts, edit auto-expand, zero API writes, separate owner/viewer preferences
 and unchanged viewer write restrictions. No new packages were added.
+
+
+Hosted acceptance after 0045 passed: daily baseline export, preview without
+writes, explicit creation, status updates, preserved dates/notes, appended dated
+progress, exact uploaded-file downloads, before/after snapshots, stable exported
+IDs, immediate HTTP 409 on stale previews and idempotent re-upload. Viewers can
+read/export history but cannot upload or alter it. Test projects were archived
+and audit trails retained; temporary sessions locally revoked.
+
+Collapsible navigation is also verified on live Render: individual/bulk WP and
+task disclosure controls, list/board use, saved layouts after refresh, separate
+viewer preferences and zero API writes. Deployed app-code commit: ab9e890.
+All 100 signed-out route/method checks passed against the published release.
