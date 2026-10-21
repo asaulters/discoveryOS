@@ -7,6 +7,7 @@ import http from "node:http";
 import crypto from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 const db = new PGlite();
+let legacyCsvState = false;
 const owner = "00000000-0000-0000-0000-000000000001",
   viewer = "00000000-0000-0000-0000-000000000002";
 const secret = crypto.randomBytes(32);
@@ -119,7 +120,12 @@ let queue = Promise.resolve();
     if (url.pathname === "/auth/v1/logout") return send(res, 204);
     if (url.pathname === "/auth/v1/.well-known/jwks.json")
       return send(res, 200, { keys: [] });
+    if (url.pathname === "/__csv-legacy" && req.method === "POST") {
+      legacyCsvState = JSON.parse(raw).enabled === true;
+      return send(res, 200, { ok: true });
+    }
     if (url.pathname === "/__reset") {
+      legacyCsvState = false;
       queue = queue.then(async () => {
         await db.exec(
           "truncate storage.objects,project_csv_updates,project_csv_keys,project_attachments,task_subtasks,project_events,tasks,work_packages,raid_items,projects,meetings cascade",
@@ -213,6 +219,7 @@ let queue = Promise.resolve();
               "select public.get_project_csv_state($1) as result",
               [body.p_project_id],
             );
+            if (legacyCsvState) delete result.rows[0].result.conflict_mode;
             await db.exec("commit");
             return send(res, 200, result.rows[0].result);
           }

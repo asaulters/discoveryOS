@@ -48,6 +48,7 @@ export async function checkProjectUpdates(db, asRole, owner, viewer) {
       )
     ).rows[0].id;
     assert.ok(subtask);
+    assert.equal((await state()).conflict_mode, "http409");
     const original = await state(),
       rows = decode(exportUpdateCsv(original.snapshot));
     rows[0].report_date = date;
@@ -131,7 +132,11 @@ export async function checkProjectUpdates(db, asRole, owner, viewer) {
       "update tasks set notes='Concurrent human edit' where id=$1",
       [task],
     );
-    await assert.rejects(apply(stale), /changed since preview/);
+    await assert.rejects(
+      apply(stale),
+      (error) =>
+        error.code === "PT409" && /changed since preview/.test(error.message),
+    );
     assert.equal(
       (await state()).snapshot.projects[0].notes,
       "Original project context",

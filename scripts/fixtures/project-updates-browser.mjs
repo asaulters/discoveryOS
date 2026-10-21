@@ -192,6 +192,39 @@ try {
     .filter({ hasText: "already applied" })
     .waitFor();
   assert.equal((await state()).tasks.length, 2);
+  // A deployment against the old database function pauses writes but keeps reads.
+  await fetch("http://127.0.0.1:54339/__csv-legacy", {
+    method: "POST",
+    body: JSON.stringify({ enabled: true }),
+  });
+  try {
+    await section
+      .getByLabel("Project update CSV", { exact: true })
+      .setInputFiles({
+        name: "paused.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(csv),
+      });
+    await section
+      .getByRole("button", { name: "Preview project updates", exact: true })
+      .click();
+    await section
+      .getByRole("alert")
+      .filter({ hasText: "migration 0045" })
+      .waitFor();
+    assert.equal(
+      await section
+        .getByRole("button", { name: "Apply CSV updates", exact: true })
+        .count(),
+      0,
+    );
+    assert.match(await downloadBaseline(), new RegExp(seed.task.id));
+  } finally {
+    await fetch("http://127.0.0.1:54339/__csv-legacy", {
+      method: "POST",
+      body: JSON.stringify({ enabled: false }),
+    });
+  }
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.waitForURL("**/login");
   await login("viewer@example.test");

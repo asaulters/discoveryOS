@@ -5276,5 +5276,17 @@ preview rejection, cross-project and archive protection, atomic event rollback,
 and viewer/anonymous denial. Existing regression 664dbbae-6ba2-42da-9d47-9bb8b2364525
 remained 10 pass / 22 warn / 0 fail, without OpenAI calls.
 
-0044 must be applied in hosted Supabase before this code is pushed/deployed.
-Hosted migration and deployment verification are pending Adam's SQL step.
+Adam applied 0044 and the feature was deployed. Live normal-upload checks
+verified update/create, original-file download, stable exported IDs, dated notes
+and before/after history. The live stale-preview check exposed Supabase's retry
+behavior for SQLSTATE 40001; verification test projects were archived.
+
+0045 changes this business conflict to PT409 and marks the patched function.
+The app pauses CSV writes until that marker is installed; baseline and history
+reads continue. Follow-up hosted migration/acceptance are pending Adam's SQL step.
+Correction validation passed: production build, typecheck, lint, daily parser,
+39-table migration/RLS suite with an explicit PT409 assertion, and the browser
+suite including paused-write/read-available behavior against an older function.
+All 100 signed-out checks passed. Supabase's documented serialization retry
+behavior explains why the original local PostgreSQL fixture did not reveal the
+hosted transport problem. The original hosted verification projects are archived.

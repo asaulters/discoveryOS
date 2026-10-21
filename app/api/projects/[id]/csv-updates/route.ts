@@ -103,7 +103,7 @@ export async function POST(
     if (result.error)
       throw new TrackerError(
         result.error.message,
-        ["40001", "23505"].includes(result.error.code)
+        ["PT409", "40001", "23505"].includes(result.error.code)
           ? 409
           : result.error.code === "42501"
             ? 403

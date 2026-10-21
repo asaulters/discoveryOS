@@ -449,3 +449,17 @@ entries remain stored. This feature does not provide automatic undo.
 Validation: `npm run test:project-updates`, `npm run test:project-import`,
 `npm run test:auth-rls`, `npm run test:tracker-ui`, `npm run typecheck`,
 `npm run lint`, `npm run build`.
+
+
+## CSV conflict-response correction (0045)
+
+If 0044 is already applied, run the **entire**
+`supabase/migrations/0045_csv_conflict_response.sql` file once in the Supabase SQL
+editor. Do not rerun 0044. This changes stale-preview errors to PostgREST's
+`PT409` business-conflict response, avoiding serialization-error retries, and
+adds a marker the app checks before allowing CSV writes. Baselines and existing
+history remain readable while writes are paused pending this patch.
+
+The patch does not alter project records or upload history. A stale preview
+still requires a fresh preview, and all update operations remain atomic.
+See [Supabase's documented retry behavior](https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b).

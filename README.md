@@ -57,7 +57,7 @@ Inside a project, open **Daily CSV updates** to download the current baseline,
 preview Claude's daily file, and apply updates to that project. Blank cells
 and omitted rows preserve existing data; new items require `action=create`.
 Give Claude the [handoff guide and prompt](docs/claude-project-updates.md).
-Apply migration **0044** before deploying; see [SETUP.md](SETUP.md#daily-project-csv-updates).
+Apply migrations **0044 and 0045** before deploying; see [SETUP.md](SETUP.md#daily-project-csv-updates).
 
 ## Reorder project work
 

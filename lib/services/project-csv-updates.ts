@@ -23,7 +23,13 @@ export async function projectCsvState(projectId: string, write = false) {
   const state = result.data as unknown as {
     snapshot: UpdateSnapshot;
     revision: string;
+    conflict_mode?: string;
   };
+  if (write && state.conflict_mode !== "http409")
+    throw new TrackerError(
+      "CSV updates are paused until database migration 0045 is applied. Baselines and existing history remain available.",
+      503,
+    );
   if (!state.snapshot.projects.length)
     throw new TrackerError("Project not found", 404);
   return { db, ...state };
