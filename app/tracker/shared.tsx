@@ -1,4 +1,5 @@
 "use client";
+import ReadableText from "@/app/tracker/ReadableText";
 import Evidence from "./Evidence";
 import ReorderControls from "./ReorderControls";
 import Subtasks from "./Subtasks";
@@ -203,8 +204,8 @@ export function RecordForm({
               name={field.name}
               aria-label={field.label}
               defaultValue={String(values[field.name] ?? "")}
-              className={`${inputClass} mt-1`}
-              rows={3}
+              className={`${inputClass} mt-1 resize-y leading-7`}
+              rows={6}
             />
           ) : field.type === "select" ? (
             <WriteSelect
@@ -348,14 +349,20 @@ export function TaskRow({
         id={detail ? `task-details-${task.id}` : undefined}
         hidden={detail?.collapsed}
       >
+        {task.notes && (
+          <ReadableText className="mb-3">{task.notes}</ReadableText>
+        )}
         {renderSubtasks?.(task, busy || !!task.archived_at)}
         <div className="w-full">
           <Evidence item={task} />
         </div>
         {task.status === "blocked" && (
-          <p className="w-full text-xs text-amber-700 dark:text-amber-400">
-            Blocked: {task.blocked_reason}
-          </p>
+          <div className="mt-3 text-amber-800 dark:text-amber-300">
+            <strong className="text-sm">Blocked</strong>
+            <ReadableText>
+              {task.blocked_reason || "No reason provided"}
+            </ReadableText>
+          </div>
         )}
       </div>
     </div>
@@ -439,6 +446,11 @@ export function TaskBoard({
                       id={detail ? `task-details-${row.task.id}` : undefined}
                       hidden={detail?.collapsed}
                     >
+                      {row.task.notes && (
+                        <ReadableText className="my-3">
+                          {row.task.notes}
+                        </ReadableText>
+                      )}
                       <Evidence item={row.task} />
                       {renderSubtasks?.(
                         row.task,
@@ -448,9 +460,12 @@ export function TaskBoard({
                           !!row.workPackage.archived_at,
                       )}
                       {status === "blocked" && (
-                        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                          Blocked: {row.task.blocked_reason}
-                        </p>
+                        <div className="mt-3 text-amber-800 dark:text-amber-300">
+                          <strong className="text-sm">Blocked</strong>
+                          <ReadableText>
+                            {row.task.blocked_reason || "No reason provided"}
+                          </ReadableText>
+                        </div>
                       )}
                     </div>
                   </article>

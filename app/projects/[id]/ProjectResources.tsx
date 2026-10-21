@@ -1,4 +1,5 @@
 "use client";
+import ReadableText from "@/app/tracker/ReadableText";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { OwnerOnly } from "@/app/RoleControls";
 import type { Project, ProjectAttachment } from "@/lib/tracker/types";
@@ -135,6 +136,10 @@ export default function ProjectResources({
       </div>
       {editingNotes ? (
         <div className="my-4">
+          <p className="mb-3 text-sm text-neutral-500">
+            Use headings (#), bullet lists (-), **bold**, links, and tables to
+            organize your notes.
+          </p>
           <RecordForm
             fields={[
               { name: "notes", label: "Project notes", type: "textarea" },
@@ -154,9 +159,9 @@ export default function ProjectResources({
           />
         </div>
       ) : (
-        <p className="my-3 whitespace-pre-wrap text-sm text-neutral-600 dark:text-neutral-300">
+        <ReadableText className="my-4">
           {project.notes || "Keep build notes and project context here."}
-        </p>
+        </ReadableText>
       )}
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <h2 className="mr-auto font-semibold">Files and links</h2>
@@ -319,9 +324,7 @@ export default function ProjectResources({
                 </OwnerOnly>
               </div>
               {r.description && (
-                <p className="mt-1 whitespace-pre-wrap text-neutral-500">
-                  {r.description}
-                </p>
+                <ReadableText className="mt-2">{r.description}</ReadableText>
               )}
               {r.kind === "file" && (
                 <p className="mt-1 text-xs text-neutral-500">

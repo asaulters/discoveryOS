@@ -36,7 +36,8 @@ try {
     }
     const project = await create("/api/projects", {
       name: "Daily update project",
-      notes: "Original context",
+      notes:
+        "## Build notes\n\n- **Ready** for review\n- Keep context\n\n| File | Status |\n| --- | --- |\n| Deck | Ready |\n\n[Reference](https://example.com)\n\n[Unsafe](javascript:alert(1))\n\n<script>window.badNote = true</script>",
     });
     const wp = await create("/api/work-packages", {
       project_id: project.id,
@@ -55,6 +56,25 @@ try {
     return { project, wp, task, subtask };
   });
   await page.goto(`${origin}/projects/${seed.project.id}`);
+  const notes = page.getByRole("region", {
+    name: "Project notes and resources",
+  });
+  await notes
+    .getByRole("heading", { name: "Build notes", exact: true })
+    .waitFor();
+  assert.equal(
+    await notes.locator("li").filter({ hasText: "Ready for review" }).count(),
+    1,
+  );
+  assert.equal(await notes.getByRole("table").count(), 1);
+  assert.equal(
+    await notes
+      .getByRole("link", { name: "Reference", exact: true })
+      .getAttribute("href"),
+    "https://example.com",
+  );
+  assert.equal(await notes.locator('a[href^="javascript:"]').count(), 0);
+  assert.equal(await page.evaluate(() => window.badNote), undefined);
   const section = page.getByRole("region", {
     name: "Project CSV updates",
     exact: true,
@@ -80,7 +100,8 @@ try {
   }
   const rows = decode(baseline);
   rows[0].report_date = "2026-10-21";
-  rows[0].update_summary = "Implementation verified, next action identified";
+  rows[0].update_summary =
+    "## Daily progress\n\n- **Implementation verified**\n- Next action identified";
   const taskRow = rows.find((r) => r.type === "task");
   taskRow.status = "done";
   taskRow.notes = "";
@@ -135,6 +156,20 @@ try {
     .getByRole("status")
     .filter({ hasText: "Project updated." })
     .waitFor();
+  const historyCard = section
+    .locator("details")
+    .filter({ hasText: "Report · 2026-10-21" });
+  await historyCard
+    .getByRole("heading", { name: "Daily progress", exact: true })
+    .waitFor();
+  await historyCard.locator("summary").click();
+  assert.equal(
+    await historyCard
+      .getByRole("heading", { name: "Daily progress", exact: true })
+      .isVisible(),
+    false,
+  );
+  await historyCard.locator("summary").click();
   const after = await state();
   assert.equal(after.tasks.length, 2);
   assert.equal(after.tasks.find((t) => t.id === seed.task.id).status, "done");

@@ -1,4 +1,5 @@
 "use client";
+import ReadableText from "@/app/tracker/ReadableText";
 import { useCallback, useRef, useState } from "react";
 import { OwnerOnly } from "@/app/RoleControls";
 import { MAX_IMPORT_BYTES } from "@/lib/tracker/csv";
@@ -212,13 +213,11 @@ export default function ProjectCsvUpdates({
                       {preview.counts.unchanged} unchanged
                     </p>
                     {preview.summary && (
-                      <p className="whitespace-pre-wrap text-sm">
-                        {preview.summary}
-                      </p>
+                      <ReadableText>{preview.summary}</ReadableText>
                     )}
-                    <div className="max-h-[32rem] overflow-auto">
+                    <div className="max-h-[40rem] overflow-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
                       <table className="w-full text-left text-sm">
-                        <thead>
+                        <thead className="sticky top-0 bg-neutral-100 dark:bg-neutral-800">
                           <tr>
                             {["Key / item", "Match", "Action / changes"].map(
                               (h) => (
@@ -248,18 +247,26 @@ export default function ProjectCsvUpdates({
                                     <span className="font-medium">
                                       {field.field}
                                     </span>
-                                    <p className="max-w-xl whitespace-pre-wrap break-words text-xs text-neutral-500">
-                                      Before:{" "}
-                                      {field.before === null
-                                        ? "(empty)"
-                                        : String(field.before)}
-                                    </p>
-                                    <p className="max-w-xl whitespace-pre-wrap break-words text-xs">
-                                      After:{" "}
-                                      {field.after === null
-                                        ? "(cleared)"
-                                        : String(field.after)}
-                                    </p>
+                                    <div className="mt-2 max-w-xl rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
+                                      <p className="mb-2 text-xs font-semibold text-neutral-500">
+                                        Before
+                                      </p>
+                                      <ReadableText>
+                                        {field.before === null
+                                          ? "(empty)"
+                                          : String(field.before)}
+                                      </ReadableText>
+                                    </div>
+                                    <div className="mt-2 max-w-xl rounded-lg border border-blue-200 bg-blue-50/30 p-3 dark:border-blue-900 dark:bg-blue-950/20">
+                                      <p className="mb-2 text-xs font-semibold text-neutral-500">
+                                        After
+                                      </p>
+                                      <ReadableText>
+                                        {field.after === null
+                                          ? "(cleared)"
+                                          : String(field.after)}
+                                      </ReadableText>
+                                    </div>
                                   </div>
                                 ))}
                               </td>
@@ -311,18 +318,34 @@ export default function ProjectCsvUpdates({
               after later updates.
             </p>
             {history.length ? (
-              <ul className="space-y-2">
-                {history.map((run) => (
-                  <li key={run.id} className="border-t pt-2 text-sm">
-                    <span>
-                      {run.report_date} ·{" "}
-                      {new Date(run.created_at).toLocaleString()}
-                    </span>
-                    {run.summary && (
-                      <p className="whitespace-pre-wrap">{run.summary}</p>
-                    )}
+              <ul className="space-y-4">
+                {history.map((run, index) => (
+                  <li
+                    key={run.id}
+                    className="rounded-xl border border-neutral-200 p-4 sm:p-5 dark:border-neutral-700"
+                  >
+                    <details open={index === 0}>
+                      <summary className="cursor-pointer text-base font-semibold">
+                        Report · {run.report_date}
+                        {index === 0 && (
+                          <span className="ml-3 rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                            Latest
+                          </span>
+                        )}
+                      </summary>
+                      <p className="mb-4 mt-2 text-sm text-neutral-500">
+                        Uploaded {new Date(run.created_at).toLocaleString()}
+                      </p>
+                      {run.summary ? (
+                        <ReadableText>{run.summary}</ReadableText>
+                      ) : (
+                        <p className="text-sm text-neutral-500">
+                          No summary included with this upload.
+                        </p>
+                      )}
+                    </details>
                     <a
-                      className="underline"
+                      className="mt-4 inline-block text-sm underline underline-offset-4"
                       href={`${base}?download=source&run_id=${run.id}`}
                       download
                     >

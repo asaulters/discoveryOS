@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Shared reading styles for imported and manually entered project text. */
+.project-prose {
+  max-width: 80ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+}
+.project-prose > * + * { margin-top: 0.85em; }
+.project-prose p { white-space: pre-wrap; }
+.project-prose h4, .project-prose h5, .project-prose h6 {
+  margin-top: 1.4em;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.project-prose h4 { font-size: 1.125rem; }
+.project-prose h5 { font-size: 1rem; }
+.project-prose > :first-child { margin-top: 0; }
+.project-prose ul, .project-prose ol { padding-left: 1.5em; }
+.project-prose ul { list-style: disc; }
+.project-prose ol { list-style: decimal; }
+.project-prose li + li { margin-top: 0.35em; }
+.project-prose li > ul, .project-prose li > ol { margin-top: 0.35em; }
+.project-prose a { text-decoration: underline; text-underline-offset: 3px; color: inherit; }
+.project-prose blockquote { border-left: 3px solid #a3a3a3; padding-left: 1em; }
+.project-prose pre { overflow-x: auto; white-space: pre; padding: 1em; border-radius: 0.5rem; background: color-mix(in srgb, currentColor 6%, transparent); }
+.project-prose code { font-family: monospace; font-size: 0.9em; }
+.project-prose :not(pre) > code { background: color-mix(in srgb, currentColor 6%, transparent); padding: 0.1em 0.3em; border-radius: 0.2rem; }
+.project-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.project-prose th, .project-prose td { border: 1px solid #a3a3a3; padding: 0.5em 0.75em; text-align: left; vertical-align: top; }
+.project-prose th { font-weight: 600; background: color-mix(in srgb, currentColor 6%, transparent); }
+.project-prose hr { border-color: #a3a3a3; margin-block: 1.5em; }
+.project-prose input[type="checkbox"] { margin-right: 0.5em; }

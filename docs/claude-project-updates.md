@@ -159,3 +159,9 @@ upload changes. No AI API call is made by intake.
 CSV updates do not change meeting evidence, project attachments/links, RAID,
 archive state, or parent relationships. Use the existing DOS controls for those.
 File attachments continue to live in the project's Files and links section.
+
+### Readable notes and summaries
+
+DOS displays Markdown in project notes and goals, work package notes and acceptance criteria, task/subtask notes, resource descriptions, and CSV update summaries. Use short paragraphs, `##` section headings, `-` bullet lists, `**bold**` labels, Markdown links, and tables. Plain text and line breaks also display correctly. HTML is not rendered.
+
+Keep CSV rules unchanged: quote fields containing commas or line breaks, escape embedded quotes by doubling them, and preserve keys and record IDs. Formatting belongs inside the existing `notes`, `progress_note`, and `update_summary` cells; do not add columns for it. A concise update summary with Progress, Blockers, and Next steps sections is easiest to scan.

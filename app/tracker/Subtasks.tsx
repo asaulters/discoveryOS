@@ -1,4 +1,5 @@
 "use client";
+import ReadableText from "@/app/tracker/ReadableText";
 import ReorderControls from "./ReorderControls";
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import {
@@ -118,9 +119,7 @@ export default function Subtasks({
             </OwnerOnly>
           </div>
           {s.notes && (
-            <p className="ml-6 mt-1 whitespace-pre-wrap text-xs text-neutral-500">
-              {s.notes}
-            </p>
+            <ReadableText className="ml-6 mt-2">{s.notes}</ReadableText>
           )}
         </div>
       ))}

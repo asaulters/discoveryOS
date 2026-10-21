@@ -1,4 +1,5 @@
 "use client";
+import ReadableText from "@/app/tracker/ReadableText";
 import ReorderControls from "@/app/tracker/ReorderControls";
 import useProjectCollapse from "@/app/tracker/useProjectCollapse";
 import Evidence from "@/app/tracker/Evidence";
@@ -184,7 +185,7 @@ export default function ProjectClient({
           </OwnerOnly>
         </div>
         {project.goal && (
-          <p className="mt-4 whitespace-pre-wrap text-sm">{project.goal}</p>
+          <ReadableText className="mt-4">{project.goal}</ReadableText>
         )}
         <dl className="my-4 flex flex-wrap gap-x-8 gap-y-3 text-sm">
           <div>
@@ -198,8 +199,8 @@ export default function ProjectClient({
           {project.definition_of_done && (
             <div className="w-full">
               <dt className="text-neutral-500">Definition of done</dt>
-              <dd className="whitespace-pre-wrap">
-                {project.definition_of_done}
+              <dd className="mt-2">
+                <ReadableText>{project.definition_of_done}</ReadableText>
               </dd>
             </div>
           )}
@@ -464,13 +465,16 @@ export default function ProjectClient({
                       <p className="text-xs font-medium text-neutral-500">
                         Notes
                       </p>
-                      <p className="whitespace-pre-wrap">{w.notes}</p>
+                      <ReadableText className="mt-2">{w.notes}</ReadableText>
                     </div>
                   )}
                   {w.acceptance_criteria && (
-                    <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
-                      {w.acceptance_criteria}
-                    </p>
+                    <div className="mb-4">
+                      <p className="mb-2 text-xs font-medium text-neutral-500">
+                        Acceptance criteria
+                      </p>
+                      <ReadableText>{w.acceptance_criteria}</ReadableText>
+                    </div>
                   )}
                   {editingPackage === w.id && (
                     <div className="mb-6">
