@@ -105,6 +105,16 @@ try {
     await subtasks.getByLabel("Subtask title", { exact: true }).inputValue(),
     "Unsaved draft",
   );
+  await button("Collapse all").click();
+  await page.reload();
+  await button("Expand work package: Alpha package").click();
+  await button("Expand task: Alpha task").waitFor();
+  assert.equal(await checklist.isVisible(), false);
+  await button("Expand task: Alpha task").click();
+  assert.equal(await checklist.isVisible(), true);
+  await button("Expand all").click();
+  await button("Collapse work package: Beta package").waitFor();
+  await button("Collapse task: Beta task").waitFor();
   await button("Collapse all tasks").click();
   assert.equal(await checklist.isVisible(), false);
   await page.reload();
@@ -145,11 +155,10 @@ try {
   );
   await button("Collapse task: Alpha task").click();
   assert.equal(await checklist.isVisible(), false);
-  await button("Collapse all work packages").click();
+  await button("Collapse all").click();
   await page.reload();
   await button("Expand work package: Alpha package").waitFor();
-  await button("Expand all work packages").click();
-  await button("Expand all tasks").click();
+  await button("Expand all").click();
   assert.equal(await checklist.isVisible(), true);
   assert.equal(
     await checklist.isEnabled(),

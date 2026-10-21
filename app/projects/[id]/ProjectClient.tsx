@@ -283,6 +283,34 @@ export default function ProjectClient({
             className={buttonClass}
             onClick={() =>
               navigation.set(
+                [
+                  ...packages.map((w) => `wp:${w.id}`),
+                  ...tracker.data.tasks.map((t) => `task:${t.id}`),
+                ],
+                true,
+              )
+            }
+          >
+            Collapse all
+          </button>
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
+                [
+                  ...packages.map((w) => `wp:${w.id}`),
+                  ...tracker.data.tasks.map((t) => `task:${t.id}`),
+                ],
+                false,
+              )
+            }
+          >
+            Expand all
+          </button>
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
                 packages.map((w) => `wp:${w.id}`),
                 true,
               )
