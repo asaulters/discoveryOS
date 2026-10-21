@@ -272,7 +272,34 @@ export function TaskStatusMenu({
     </WriteSelect>
   );
 }
+interface TaskDisclosure {
+  collapsed: boolean;
+  toggle: () => void;
+  summary: string;
+}
+function TaskCollapseButton({
+  task,
+  disclosure,
+}: {
+  task: Task;
+  disclosure?: TaskDisclosure;
+}) {
+  if (!disclosure) return null;
+  return (
+    <button
+      type="button"
+      className="rounded px-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+      aria-label={`${disclosure.collapsed ? "Expand" : "Collapse"} task: ${task.title}`}
+      aria-expanded={!disclosure.collapsed}
+      aria-controls={`task-details-${task.id}`}
+      onClick={disclosure.toggle}
+    >
+      {disclosure.collapsed ? "▸" : "▾"}
+    </button>
+  );
+}
 export interface TaskActions {
+  disclosure?: (task: Task) => TaskDisclosure;
   open: (task: Task, status?: TaskStatus) => void;
   change: (task: Task, status: TaskStatus) => void;
   busy: boolean;
@@ -284,12 +311,15 @@ export function TaskRow({
   context,
   renderSubtasks,
   renderReorder,
+  disclosure,
   open,
   change,
   busy,
 }: { task: Task; context?: string } & TaskActions) {
+  const detail = disclosure?.(task);
   return (
     <div className="flex flex-wrap items-center gap-3 border-t border-neutral-100 py-3 dark:border-neutral-800">
+      <TaskCollapseButton task={task} disclosure={detail} />
       <button
         type="button"
         className="min-w-40 flex-1 text-left text-sm font-medium hover:underline"
@@ -310,15 +340,24 @@ export function TaskRow({
       </span>
       {renderReorder?.(task, busy || !!task.archived_at)}
       <TaskStatusMenu task={task} busy={busy} change={change} />
-      {renderSubtasks?.(task, busy || !!task.archived_at)}
-      <div className="w-full">
-        <Evidence item={task} />
-      </div>
-      {task.status === "blocked" && (
-        <p className="w-full text-xs text-amber-700 dark:text-amber-400">
-          Blocked: {task.blocked_reason}
-        </p>
+      {detail?.collapsed && (
+        <p className="w-full text-xs text-neutral-500">{detail.summary}</p>
       )}
+      <div
+        className="w-full"
+        id={detail ? `task-details-${task.id}` : undefined}
+        hidden={detail?.collapsed}
+      >
+        {renderSubtasks?.(task, busy || !!task.archived_at)}
+        <div className="w-full">
+          <Evidence item={task} />
+        </div>
+        {task.status === "blocked" && (
+          <p className="w-full text-xs text-amber-700 dark:text-amber-400">
+            Blocked: {task.blocked_reason}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -326,6 +365,7 @@ export function TaskBoard({
   rows,
   renderSubtasks,
   renderReorder,
+  disclosure,
   open,
   change,
   busy,
@@ -345,63 +385,77 @@ export function TaskBoard({
           <div className="space-y-3">
             {rows
               .filter((r) => r.task.status === status)
-              .map((row) => (
-                <article
-                  key={row.task.id}
-                  className="rounded border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
-                >
-                  <button
-                    type="button"
-                    className="text-left text-sm font-medium hover:underline"
-                    onClick={() => open(row.task)}
+              .map((row) => {
+                const detail = disclosure?.(row.task);
+                return (
+                  <article
+                    key={row.task.id}
+                    className="rounded border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
                   >
-                    {row.task.title}
-                  </button>
-                  <p className="my-2 text-xs text-neutral-500">
-                    <Link
-                      href={`/projects/${row.project.id}`}
-                      className="hover:underline"
+                    <TaskCollapseButton task={row.task} disclosure={detail} />
+                    <button
+                      type="button"
+                      className="text-left text-sm font-medium hover:underline"
+                      onClick={() => open(row.task)}
                     >
-                      {row.project.name}
-                    </Link>{" "}
-                    · {row.workPackage.name}
-                  </p>
-                  <p className="mb-2 text-xs text-neutral-500">
-                    {row.task.due_date ?? "No date"}
-                    {row.task.archived_at ? " · Archived" : ""}
-                  </p>
-                  <Evidence item={row.task} />
-                  {renderReorder?.(
-                    row.task,
-                    busy ||
-                      !!row.project.archived_at ||
-                      !!row.workPackage.archived_at ||
-                      !!row.task.archived_at,
-                    true,
-                  )}
-                  <TaskStatusMenu
-                    task={row.task}
-                    busy={
-                      busy ||
-                      !!row.project.archived_at ||
-                      !!row.workPackage.archived_at
-                    }
-                    change={change}
-                  />
-                  {renderSubtasks?.(
-                    row.task,
-                    busy ||
-                      !!row.task.archived_at ||
-                      !!row.project.archived_at ||
-                      !!row.workPackage.archived_at,
-                  )}
-                  {status === "blocked" && (
-                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                      Blocked: {row.task.blocked_reason}
+                      {row.task.title}
+                    </button>
+                    <p className="my-2 text-xs text-neutral-500">
+                      <Link
+                        href={`/projects/${row.project.id}`}
+                        className="hover:underline"
+                      >
+                        {row.project.name}
+                      </Link>{" "}
+                      · {row.workPackage.name}
                     </p>
-                  )}
-                </article>
-              ))}
+                    <p className="mb-2 text-xs text-neutral-500">
+                      {row.task.due_date ?? "No date"}
+                      {row.task.archived_at ? " · Archived" : ""}
+                    </p>
+                    {renderReorder?.(
+                      row.task,
+                      busy ||
+                        !!row.project.archived_at ||
+                        !!row.workPackage.archived_at ||
+                        !!row.task.archived_at,
+                      true,
+                    )}
+                    <TaskStatusMenu
+                      task={row.task}
+                      busy={
+                        busy ||
+                        !!row.project.archived_at ||
+                        !!row.workPackage.archived_at
+                      }
+                      change={change}
+                    />
+                    {detail?.collapsed && (
+                      <p className="mt-2 text-xs text-neutral-500">
+                        {detail.summary}
+                      </p>
+                    )}
+                    <div
+                      id={detail ? `task-details-${row.task.id}` : undefined}
+                      hidden={detail?.collapsed}
+                    >
+                      <Evidence item={row.task} />
+                      {renderSubtasks?.(
+                        row.task,
+                        busy ||
+                          !!row.task.archived_at ||
+                          !!row.project.archived_at ||
+                          !!row.workPackage.archived_at,
+                      )}
+                      {status === "blocked" && (
+                        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                          Blocked: {row.task.blocked_reason}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
           </div>
         </section>
       ))}

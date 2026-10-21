@@ -59,6 +59,14 @@ and omitted rows preserve existing data; new items require `action=create`.
 Give Claude the [handoff guide and prompt](docs/claude-project-updates.md).
 Apply migrations **0044 and 0045** before deploying; see [SETUP.md](SETUP.md#daily-project-csv-updates).
 
+## Navigate large projects
+
+Use the ▸ / ▾ controls beside work packages and tasks to collapse or expand
+contents in list and board views. Bulk controls expand/collapse all work packages
+or all tasks. Titles/status/progress remain visible, and layout preferences are
+saved per user and project in your browser. Collapsing preserves unsaved drafts.
+Owners and viewers can both use these navigation controls; no migration is needed.
+
 ## Reorder project work
 
 Owners can use the ↑ / ↓ controls beside work packages, tasks and subtasks

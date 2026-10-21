@@ -5290,3 +5290,24 @@ suite including paused-write/read-available behavior against an older function.
 All 100 signed-out checks passed. Supabase's documented serialization retry
 behavior explains why the original local PostgreSQL fixture did not reveal the
 hosted transport problem. The original hosted verification projects are archived.
+
+## Collapsible project navigation
+
+Added individual work-package and task disclosure controls in project list and
+board views, plus expand/collapse-all controls for each level. Collapsed items
+keep their headings/status/progress visible while hiding detail content.
+Task summaries show checklist completion counts. Work-package Edit expands its
+content automatically. Hidden detail components remain mounted so unsaved
+quick-add/checklist/editor drafts survive collapse and re-expansion.
+
+Preferences use browser storage scoped to user and project, with an in-memory
+fallback when storage is unavailable. Owners and viewers both have navigation
+controls; no API/database writes, role changes or new migration are involved.
+The separate CSV 0045 patch remains independent of these navigation controls.
+
+Validation passed: production build, typecheck, lint, full existing tracker,
+discovery, resources, CSV-update and reorder browser acceptance, plus the new
+collapse suite and all 100 signed-out checks. Collapse acceptance covers list/
+board behavior, keyboard access, bulk actions, reload persistence, retained
+drafts, edit auto-expand, zero API writes, separate owner/viewer preferences
+and unchanged viewer write restrictions. No new packages were added.

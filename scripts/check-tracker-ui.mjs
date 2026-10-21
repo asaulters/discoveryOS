@@ -79,6 +79,7 @@ try {
   await run("scripts/fixtures/project-resources-browser.mjs");
   await run("scripts/fixtures/tracker-reorder-browser.mjs");
   await run("scripts/fixtures/project-updates-browser.mjs");
+  await run("scripts/fixtures/project-collapse-browser.mjs");
   await run("scripts/check-signed-out.mjs");
   console.log("PASS: isolated tracker browser/API/RLS acceptance suite.");
 } finally {

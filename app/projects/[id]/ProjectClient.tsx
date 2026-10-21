@@ -1,5 +1,6 @@
 "use client";
 import ReorderControls from "@/app/tracker/ReorderControls";
+import useProjectCollapse from "@/app/tracker/useProjectCollapse";
 import Evidence from "@/app/tracker/Evidence";
 import Raid from "@/app/tracker/Raid";
 import ProjectCsvUpdates from "./ProjectCsvUpdates";
@@ -92,7 +93,27 @@ export default function ProjectClient({
   const [editing, setEditing] = useState(false),
     [adding, setAdding] = useState(false),
     [editingPackage, setEditingPackage] = useState<string | null>(null);
-  const { actions, pane } = useTaskActions(tracker, true, showArchived);
+  const navigation = useProjectCollapse(userId, initial.projects[0].id);
+  const { actions: taskActions, pane } = useTaskActions(
+    tracker,
+    true,
+    showArchived,
+  );
+  const actions = {
+    ...taskActions,
+    disclosure: (task: { id: string }) => {
+      const subtasks = tracker.data.subtasks.filter(
+        (s) => s.task_id === task.id && !s.archived_at,
+      );
+      return {
+        collapsed: navigation.isCollapsed(`task:${task.id}`),
+        toggle: () => navigation.toggle(`task:${task.id}`),
+        summary: subtasks.length
+          ? `${subtasks.length} subtask${subtasks.length === 1 ? "" : "s"} · ${subtasks.filter((s) => s.is_done).length} complete`
+          : "Task details",
+      };
+    },
+  };
   const project = tracker.data.projects[0];
   const packages = tracker.data.workPackages.filter(
     (w) => showArchived || !w.archived_at,
@@ -253,6 +274,57 @@ export default function ProjectClient({
           </WriteButton>
         </OwnerOnly>
       </div>
+      {!raidView && packages.length > 0 && (
+        <div
+          className="mb-4 flex flex-wrap gap-2"
+          aria-label="Expand and collapse project items"
+        >
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
+                packages.map((w) => `wp:${w.id}`),
+                true,
+              )
+            }
+          >
+            Collapse all work packages
+          </button>
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
+                packages.map((w) => `wp:${w.id}`),
+                false,
+              )
+            }
+          >
+            Expand all work packages
+          </button>
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
+                tracker.data.tasks.map((t) => `task:${t.id}`),
+                true,
+              )
+            }
+          >
+            Collapse all tasks
+          </button>
+          <button
+            className={buttonClass}
+            onClick={() =>
+              navigation.set(
+                tracker.data.tasks.map((t) => `task:${t.id}`),
+                false,
+              )
+            }
+          >
+            Expand all tasks
+          </button>
+        </div>
+      )}
       {adding && (
         <section className={`${panelClass} mb-6`}>
           <h2 className="mb-4 font-semibold">Add work package</h2>
@@ -284,16 +356,29 @@ export default function ProjectClient({
               <section className={panelClass} key={w.id}>
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h2 className="font-semibold">
-                      {w.name}
-                      {w.archived_at && (
-                        <span className="ml-2 text-xs text-neutral-500">
-                          Archived
-                        </span>
-                      )}
-                    </h2>
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        className="rounded px-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        aria-label={`${navigation.isCollapsed(`wp:${w.id}`) ? "Expand" : "Collapse"} work package: ${w.name}`}
+                        aria-expanded={!navigation.isCollapsed(`wp:${w.id}`)}
+                        aria-controls={`wp-details-${w.id}`}
+                        onClick={() => navigation.toggle(`wp:${w.id}`)}
+                      >
+                        {navigation.isCollapsed(`wp:${w.id}`) ? "▸" : "▾"}
+                      </button>
+                      <h2 className="font-semibold">
+                        {w.name}
+                        {w.archived_at && (
+                          <span className="ml-2 text-xs text-neutral-500">
+                            Archived
+                          </span>
+                        )}
+                      </h2>
+                    </div>
                     <p className="mt-1 text-xs text-neutral-500">
-                      {label(w.status)} · Target: {w.target_date ?? "Not set"}
+                      {tasks.length} tasks · {label(w.status)} · Target:{" "}
+                      {w.target_date ?? "Not set"}
                     </p>
                   </div>
                   <Progress
@@ -314,11 +399,12 @@ export default function ProjectClient({
                       <WriteButton
                         disabled={!!project.archived_at}
                         className={buttonClass}
-                        onClick={() =>
+                        onClick={() => {
+                          navigation.set([`wp:${w.id}`], false);
                           setEditingPackage(
                             editingPackage === w.id ? null : w.id,
-                          )
-                        }
+                          );
+                        }}
                       >
                         Edit
                       </WriteButton>
@@ -340,121 +426,126 @@ export default function ProjectClient({
                     </div>
                   </OwnerOnly>
                 </div>
-                <Evidence item={w} />
-                {w.notes && (
-                  <div className="mb-4 text-sm">
-                    <p className="text-xs font-medium text-neutral-500">
-                      Notes
+                <div
+                  id={`wp-details-${w.id}`}
+                  hidden={navigation.isCollapsed(`wp:${w.id}`)}
+                >
+                  <Evidence item={w} />
+                  {w.notes && (
+                    <div className="mb-4 text-sm">
+                      <p className="text-xs font-medium text-neutral-500">
+                        Notes
+                      </p>
+                      <p className="whitespace-pre-wrap">{w.notes}</p>
+                    </div>
+                  )}
+                  {w.acceptance_criteria && (
+                    <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
+                      {w.acceptance_criteria}
                     </p>
-                    <p className="whitespace-pre-wrap">{w.notes}</p>
-                  </div>
-                )}
-                {w.acceptance_criteria && (
-                  <p className="mb-4 whitespace-pre-wrap text-sm text-neutral-500">
-                    {w.acceptance_criteria}
-                  </p>
-                )}
-                {editingPackage === w.id && (
-                  <div className="mb-6">
-                    <RecordForm
-                      fields={packageFields}
-                      values={{ ...w }}
-                      busy={tracker.busy}
-                      save={async (values) => {
-                        if (
-                          await tracker.mutate(
-                            `/api/work-packages/${w.id}`,
-                            "PATCH",
-                            values,
+                  )}
+                  {editingPackage === w.id && (
+                    <div className="mb-6">
+                      <RecordForm
+                        fields={packageFields}
+                        values={{ ...w }}
+                        busy={tracker.busy}
+                        save={async (values) => {
+                          if (
+                            await tracker.mutate(
+                              `/api/work-packages/${w.id}`,
+                              "PATCH",
+                              values,
+                            )
                           )
-                        )
-                          setEditingPackage(null);
-                      }}
-                    />
-                  </div>
-                )}
-                <div>
-                  {view === "list" ? (
-                    tasks.map((task) => (
-                      <TaskRow
-                        key={task.id}
-                        task={task}
-                        {...actions}
-                        busy={
-                          actions.busy ||
-                          !!project.archived_at ||
-                          !!w.archived_at
-                        }
-                      />
-                    ))
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <TaskBoard
-                        rows={tasks.map((task) => ({
-                          task,
-                          workPackage: w,
-                          project,
-                        }))}
-                        {...actions}
-                        busy={
-                          actions.busy ||
-                          !!project.archived_at ||
-                          !!w.archived_at
-                        }
+                            setEditingPackage(null);
+                        }}
                       />
                     </div>
                   )}
-                  {!tasks.length && view === "list" && (
-                    <p className="py-4 text-sm text-neutral-500">
-                      No tasks in this work package.
-                    </p>
-                  )}
-                  <OwnerOnly>
-                    <fieldset
-                      disabled={!!project.archived_at || !!w.archived_at}
-                    >
-                      <form
-                        onSubmit={(event) => quickAdd(event, w)}
-                        className="mt-4 flex flex-wrap items-end gap-2"
+                  <div>
+                    {view === "list" ? (
+                      tasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          {...actions}
+                          busy={
+                            actions.busy ||
+                            !!project.archived_at ||
+                            !!w.archived_at
+                          }
+                        />
+                      ))
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <TaskBoard
+                          rows={tasks.map((task) => ({
+                            task,
+                            workPackage: w,
+                            project,
+                          }))}
+                          {...actions}
+                          busy={
+                            actions.busy ||
+                            !!project.archived_at ||
+                            !!w.archived_at
+                          }
+                        />
+                      </div>
+                    )}
+                    {!tasks.length && view === "list" && (
+                      <p className="py-4 text-sm text-neutral-500">
+                        No tasks in this work package.
+                      </p>
+                    )}
+                    <OwnerOnly>
+                      <fieldset
+                        disabled={!!project.archived_at || !!w.archived_at}
                       >
-                        <label className="min-w-40 flex-1 text-xs text-neutral-500">
-                          Quick add
-                          <WriteInput
-                            aria-label={`New task in ${w.name}`}
-                            name="title"
-                            placeholder="What needs to happen?"
-                            required
-                            className={`${inputClass} mt-1`}
-                          />
-                        </label>
-                        <label className="text-xs text-neutral-500">
-                          Due date
-                          <WriteInput
-                            name="due_date"
-                            type="date"
-                            className={`${inputClass} mt-1`}
-                          />
-                        </label>
-                        <label className="w-full text-xs text-neutral-500">
-                          Notes (optional)
-                          <WriteTextarea
-                            aria-label={`Task notes in ${w.name}`}
-                            name="notes"
-                            rows={2}
-                            maxLength={20000}
-                            className={`${inputClass} mt-1`}
-                          />
-                        </label>
-                        <WriteButton
-                          type="submit"
-                          disabled={tracker.busy}
-                          className={buttonClass}
+                        <form
+                          onSubmit={(event) => quickAdd(event, w)}
+                          className="mt-4 flex flex-wrap items-end gap-2"
                         >
-                          Add task
-                        </WriteButton>
-                      </form>
-                    </fieldset>
-                  </OwnerOnly>
+                          <label className="min-w-40 flex-1 text-xs text-neutral-500">
+                            Quick add
+                            <WriteInput
+                              aria-label={`New task in ${w.name}`}
+                              name="title"
+                              placeholder="What needs to happen?"
+                              required
+                              className={`${inputClass} mt-1`}
+                            />
+                          </label>
+                          <label className="text-xs text-neutral-500">
+                            Due date
+                            <WriteInput
+                              name="due_date"
+                              type="date"
+                              className={`${inputClass} mt-1`}
+                            />
+                          </label>
+                          <label className="w-full text-xs text-neutral-500">
+                            Notes (optional)
+                            <WriteTextarea
+                              aria-label={`Task notes in ${w.name}`}
+                              name="notes"
+                              rows={2}
+                              maxLength={20000}
+                              className={`${inputClass} mt-1`}
+                            />
+                          </label>
+                          <WriteButton
+                            type="submit"
+                            disabled={tracker.busy}
+                            className={buttonClass}
+                          >
+                            Add task
+                          </WriteButton>
+                        </form>
+                      </fieldset>
+                    </OwnerOnly>
+                  </div>
                 </div>
               </section>
             );
